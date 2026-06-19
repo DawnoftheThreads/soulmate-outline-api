@@ -105,16 +105,28 @@ def process():
 
     try:
         # 1. Download original photo
-        req = urllib.request.Request(
-            photo_url, headers={'User-Agent': 'Mozilla/5.0 SoulmateAPI/4'})
-        with urllib.request.urlopen(req, timeout=60) as r:
-            original_bytes = r.read()
+        try:
+            req = urllib.request.Request(
+                photo_url, headers={'User-Agent': 'Mozilla/5.0 SoulmateAPI/4'})
+            with urllib.request.urlopen(req, timeout=60) as r:
+                original_bytes = r.read()
+        except Exception as e:
+            import traceback
+            return jsonify({'error': f'[step1-download] {e}', 'trace': traceback.format_exc()[-600:]}), 500
 
         # 2. Remove background
-        nobg_bytes = remove_background(original_bytes, api_key)
+        try:
+            nobg_bytes = remove_background(original_bytes, api_key)
+        except Exception as e:
+            import traceback
+            return jsonify({'error': f'[step2-remove-bg] {e}', 'trace': traceback.format_exc()[-600:]}), 500
 
-        # 3. Generate Firefly-quality line art
-        lineart_bytes = generate_line_art(nobg_bytes, api_key)
+        # 3. Generate line art
+        try:
+            lineart_bytes = generate_line_art(nobg_bytes, api_key)
+        except Exception as e:
+            import traceback
+            return jsonify({'error': f'[step3-lineart] {e}', 'trace': traceback.format_exc()[-600:]}), 500
 
         # 4. Return as base64 PNG
         return jsonify({
