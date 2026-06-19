@@ -1,48 +1,88 @@
 from flask import Flask, request, jsonify
-import urllib.request, base64, json, os, time
+import urllib.request, base64, json, os, time, io
 
 app = Flask(__name__)
 
 # ---------------------------------------------------------------------------
-# Replicate SDXL img2img — fine pen & ink line art portrait
-# Model: stability-ai/sdxl (official, well-tested)
+# ControlNet Scribble — photo → edge map → fine ink line art portrait
+# jagilley/controlnet-scribble on Replicate
 # ---------------------------------------------------------------------------
 
-REPLICATE_VERSION = '39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b'
+CONTROLNET_VERSION = '435061a1b5a4c1e26740464bf786efdfa9cb3a3ac488595a2de23e143fdb0117'
 
 LINE_ART_PROMPT = (
-    'fine pen and ink line art illustration, detailed cross-hatching shading, '
-    'engraving style portrait, clean precise ink lines on cream paper, '
-    'romantic couple portrait drawing, beautiful detailed faces and hair, '
-    'background scenery in line art style, sepia brown ink, '
-    'professional artist illustration, fine line engraving, no colour fill'
+    'clean line art portrait illustration, fine single ink outlines, '
+    'romantic couple portrait, beautiful detailed faces and hair, '
+    'smooth flowing ink lines on cream paper, sepia brown ink, '
+    'professional portrait sketch, no shading, no fill, no cross-hatching, '
+    'pure clean outlines only, high detail line drawing'
 )
 
 LINE_ART_NEGATIVE = (
-    'color, colorful, painting, watercolor, digital art, 3d render, photograph, '
-    'photorealistic, blurry, low quality, bad anatomy, distorted faces, '
-    'extra fingers, deformed hands, ugly, worst quality'
+    'color, colorful, photograph, photorealistic, blurry, low quality, '
+    'bad anatomy, distorted faces, watercolor, painting, digital art, '
+    'extra fingers, deformed'
 )
 
 
+# ---------------------------------------------------------------------------
+# Step 1 — edge extraction (pure PIL, no external API)
+# ---------------------------------------------------------------------------
+
+def extract_edges(image_bytes: bytes) -> bytes:
+    """Convert photo to a high-contrast edge/scribble map for ControlNet."""
+    from PIL import Image, ImageFilter, ImageOps, ImageEnhance
+
+    img = Image.open(io.BytesIO(image_bytes)).convert('RGB')
+
+    # ControlNet scribble works best at 512 × 512
+    img = img.resize((512, 512), Image.LANCZOS)
+
+    # Grayscale → slight blur to reduce photo noise
+    gray = img.convert('L')
+    gray = gray.filter(ImageFilter.GaussianBlur(radius=1.5))
+
+    # Edge detection
+    edges = gray.filter(ImageFilter.FIND_EDGES)
+
+    # Boost contrast so lines are clear
+    edges = ImageEnhance.Contrast(edges).enhance(5.0)
+
+    # Invert: white background, black lines (ControlNet scribble convention)
+    edges = ImageOps.invert(edges)
+
+    # Back to RGB for the model
+    edges = edges.convert('RGB')
+
+    buf = io.BytesIO()
+    edges.save(buf, format='PNG')
+    return buf.getvalue()
+
+
+# ---------------------------------------------------------------------------
+# Step 2 — ControlNet Replicate call
+# ---------------------------------------------------------------------------
+
 def generate_line_art(image_bytes: bytes, replicate_token: str) -> bytes:
-    """Send photo to Replicate SDXL img2img, return line art PNG bytes."""
-    # Detect JPEG vs PNG
-    mime = 'image/jpeg' if image_bytes[:3] == b'\xff\xd8\xff' else 'image/png'
-    img_data_url = f'data:{mime};base64,{base64.b64encode(image_bytes).decode()}'
+    """Extract edges, then run ControlNet Scribble to produce ink line art."""
+
+    edge_bytes = extract_edges(image_bytes)
+    img_data_url = (
+        'data:image/png;base64,'
+        + base64.b64encode(edge_bytes).decode()
+    )
 
     payload = {
-        'version': REPLICATE_VERSION,
+        'version': CONTROLNET_VERSION,
         'input': {
-            'image':              img_data_url,
-            'prompt':             LINE_ART_PROMPT,
-            'negative_prompt':    LINE_ART_NEGATIVE,
-            'prompt_strength':    0.65,   # 0 = keep photo, 1 = ignore photo
-            'num_outputs':        1,
-            'num_inference_steps': 50,
-            'guidance_scale':     7.5,
-            'width':              1024,
-            'height':             1024,
+            'image':             img_data_url,
+            'prompt':            LINE_ART_PROMPT,
+            'negative_prompt':   LINE_ART_NEGATIVE,
+            'num_samples':       '1',
+            'image_resolution':  '512',
+            'ddim_steps':        40,
+            'scale':             9.0,
+            'eta':               0.0,
         },
     }
 
@@ -64,7 +104,7 @@ def generate_line_art(image_bytes: bytes, replicate_token: str) -> bytes:
 
     poll_url = f'https://api.replicate.com/v1/predictions/{prediction["id"]}'
 
-    # Poll until complete (up to 3 minutes)
+    # Poll (up to 3 minutes)
     for _ in range(90):
         time.sleep(2)
         req = urllib.request.Request(
@@ -99,8 +139,8 @@ def generate_line_art(image_bytes: bytes, replicate_token: str) -> bytes:
 def health():
     return jsonify({
         'status':   'ok',
-        'service':  'Soulmate Custom Gifts — Photo Outline API v6',
-        'pipeline': 'Replicate SDXL img2img → fine pen & ink line art',
+        'service':  'Soulmate Custom Gifts — Photo Outline API v7',
+        'pipeline': 'PIL edge extraction → ControlNet Scribble → pen & ink portrait',
     })
 
 
@@ -121,7 +161,7 @@ def process():
     # 1. Download photo
     try:
         req = urllib.request.Request(
-            photo_url, headers={'User-Agent': 'Mozilla/5.0 SoulmateAPI/6'})
+            photo_url, headers={'User-Agent': 'Mozilla/5.0 SoulmateAPI/7'})
         with urllib.request.urlopen(req, timeout=60) as r:
             photo_bytes = r.read()
     except Exception as e:
@@ -129,18 +169,18 @@ def process():
         return jsonify({'error': f'[step1-download] {e}',
                         'trace': traceback.format_exc()[-600:]}), 500
 
-    # 2. Generate line art via Replicate
+    # 2. Edge extract + ControlNet line art
     try:
         lineart_bytes = generate_line_art(photo_bytes, replicate_token)
     except Exception as e:
         import traceback
-        return jsonify({'error': f'[step2-replicate] {e}',
+        return jsonify({'error': f'[step2-controlnet] {e}',
                         'trace': traceback.format_exc()[-600:]}), 500
 
     return jsonify({
         'success':           True,
         'sketch_png_base64': base64.b64encode(lineart_bytes).decode(),
-        'note':              'Replicate SDXL img2img — pen & ink line art',
+        'note':              'ControlNet Scribble — fine pen & ink line art portrait',
     })
 
 
