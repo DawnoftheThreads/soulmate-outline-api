@@ -59,7 +59,7 @@ def generate_line_art(image_bytes: bytes, replicate_token: str) -> bytes:
     with urllib.request.urlopen(req, timeout=30) as r:
         prediction = json.loads(r.read())
 
-    if 'error' in prediction:
+    if prediction.get('error'):
         raise RuntimeError(f'Replicate create error: {prediction["error"]}')
 
     poll_url = f'https://api.replicate.com/v1/predictions/{prediction["id"]}'
