@@ -1,78 +1,93 @@
 from flask import Flask, request, jsonify
-import urllib.request, base64, io, os
+import urllib.request, base64, json, os, time
 
 app = Flask(__name__)
 
-STABILITY_API = 'https://api.stability.ai'
-
-
 # ---------------------------------------------------------------------------
-# Multipart helper
+# Replicate SDXL img2img — fine pen & ink line art portrait
+# Model: stability-ai/sdxl (official, well-tested)
 # ---------------------------------------------------------------------------
 
-def multipart_body(fields: dict, files: dict, boundary: str) -> bytes:
-    b = boundary.encode()
-    body = b''
-    for name, value in fields.items():
-        body += b'--' + b + b'\r\n'
-        body += f'Content-Disposition: form-data; name="{name}"\r\n\r\n'.encode()
-        body += str(value).encode() + b'\r\n'
-    for name, (filename, data, ct) in files.items():
-        body += b'--' + b + b'\r\n'
-        body += f'Content-Disposition: form-data; name="{name}"; filename="{filename}"\r\n'.encode()
-        body += f'Content-Type: {ct}\r\n\r\n'.encode()
-        body += data + b'\r\n'
-    body += b'--' + b + b'--\r\n'
-    return body
+REPLICATE_VERSION = '39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b'
+
+LINE_ART_PROMPT = (
+    'fine pen and ink line art illustration, detailed cross-hatching shading, '
+    'engraving style portrait, clean precise ink lines on cream paper, '
+    'romantic couple portrait drawing, beautiful detailed faces and hair, '
+    'background scenery in line art style, sepia brown ink, '
+    'professional artist illustration, fine line engraving, no colour fill'
+)
+
+LINE_ART_NEGATIVE = (
+    'color, colorful, painting, watercolor, digital art, 3d render, photograph, '
+    'photorealistic, blurry, low quality, bad anatomy, distorted faces, '
+    'extra fingers, deformed hands, ugly, worst quality'
+)
 
 
-def stability_post(endpoint: str, api_key: str, fields: dict, files: dict) -> bytes:
-    boundary = 'StabilityBoundary42'
-    body = multipart_body(fields, files, boundary)
+def generate_line_art(image_bytes: bytes, replicate_token: str) -> bytes:
+    """Send photo to Replicate SDXL img2img, return line art PNG bytes."""
+    # Detect JPEG vs PNG
+    mime = 'image/jpeg' if image_bytes[:3] == b'\xff\xd8\xff' else 'image/png'
+    img_data_url = f'data:{mime};base64,{base64.b64encode(image_bytes).decode()}'
+
+    payload = {
+        'version': REPLICATE_VERSION,
+        'input': {
+            'image':              img_data_url,
+            'prompt':             LINE_ART_PROMPT,
+            'negative_prompt':    LINE_ART_NEGATIVE,
+            'prompt_strength':    0.65,   # 0 = keep photo, 1 = ignore photo
+            'num_outputs':        1,
+            'num_inference_steps': 50,
+            'guidance_scale':     7.5,
+            'width':              1024,
+            'height':             1024,
+        },
+    }
+
+    # Create prediction
     req = urllib.request.Request(
-        STABILITY_API + endpoint,
-        data=body,
+        'https://api.replicate.com/v1/predictions',
+        data=json.dumps(payload).encode(),
         headers={
-            'Authorization': f'Bearer {api_key}',
-            'Accept':        'image/*',
-            'Content-Type':  f'multipart/form-data; boundary={boundary}',
+            'Authorization': f'Token {replicate_token}',
+            'Content-Type':  'application/json',
         },
         method='POST',
     )
-    with urllib.request.urlopen(req, timeout=180) as r:
-        status = r.status
-        result = r.read()
-    if status not in (200, 201):
-        raise RuntimeError(f'Stability AI {endpoint} → {status}: {result[:400]}')
-    return result
+    with urllib.request.urlopen(req, timeout=30) as r:
+        prediction = json.loads(r.read())
 
+    if 'error' in prediction:
+        raise RuntimeError(f'Replicate create error: {prediction["error"]}')
 
-# ---------------------------------------------------------------------------
-# Pipeline steps
-# ---------------------------------------------------------------------------
+    poll_url = f'https://api.replicate.com/v1/predictions/{prediction["id"]}'
 
-def remove_background(image_bytes: bytes, api_key: str) -> bytes:
-    return stability_post(
-        '/v2beta/stable-image/edit/remove-background', api_key,
-        fields={'output_format': 'png'},
-        files={'image': ('photo.jpg', image_bytes, 'image/jpeg')},
-    )
+    # Poll until complete (up to 3 minutes)
+    for _ in range(90):
+        time.sleep(2)
+        req = urllib.request.Request(
+            poll_url,
+            headers={'Authorization': f'Token {replicate_token}'},
+        )
+        with urllib.request.urlopen(req, timeout=30) as r:
+            prediction = json.loads(r.read())
 
+        status = prediction.get('status')
+        if status == 'succeeded':
+            output = prediction.get('output', [])
+            output_url = output[0] if isinstance(output, list) and output else output
+            if not output_url:
+                raise RuntimeError('Replicate returned empty output')
+            with urllib.request.urlopen(output_url, timeout=60) as r:
+                return r.read()
+        elif status in ('failed', 'canceled'):
+            raise RuntimeError(
+                f'Replicate prediction {status}: {prediction.get("error", "unknown")}'
+            )
 
-def generate_line_art(image_bytes: bytes, api_key: str) -> bytes:
-    return stability_post(
-        '/v2beta/stable-image/control/structure', api_key,
-        fields={
-            'prompt': (
-                'fine pencil line art portrait, clean black ink outlines on white paper, '
-                'minimal sketch illustration, no fill, no colour, no background, '
-                'romantic couple portrait drawing'
-            ),
-            'control_strength': '0.85',
-            'output_format':    'png',
-        },
-        files={'image': ('nobg.png', image_bytes, 'image/png')},
-    )
+    raise RuntimeError('Replicate prediction timed out after 3 minutes')
 
 
 # ---------------------------------------------------------------------------
@@ -83,9 +98,9 @@ def generate_line_art(image_bytes: bytes, api_key: str) -> bytes:
 @app.route('/api/process', methods=['GET'])
 def health():
     return jsonify({
-        'status':  'ok',
-        'service': 'Soulmate Custom Gifts — Photo Outline API v4',
-        'host':    'Railway (Stability AI pipeline)',
+        'status':   'ok',
+        'service':  'Soulmate Custom Gifts — Photo Outline API v6',
+        'pipeline': 'Replicate SDXL img2img → fine pen & ink line art',
     })
 
 
@@ -99,48 +114,34 @@ def process():
     if not photo_url:
         return jsonify({'error': 'Missing photo_url'}), 400
 
-    api_key = data.get('stability_api_key') or os.environ.get('STABILITY_API_KEY', '')
-    if not api_key:
-        return jsonify({'error': 'Missing STABILITY_API_KEY env var'}), 400
+    replicate_token = data.get('replicate_token') or os.environ.get('REPLICATE_API_TOKEN', '')
+    if not replicate_token:
+        return jsonify({'error': 'Missing REPLICATE_API_TOKEN env var'}), 400
 
+    # 1. Download photo
     try:
-        # 1. Download original photo
-        try:
-            req = urllib.request.Request(
-                photo_url, headers={'User-Agent': 'Mozilla/5.0 SoulmateAPI/4'})
-            with urllib.request.urlopen(req, timeout=60) as r:
-                original_bytes = r.read()
-        except Exception as e:
-            import traceback
-            return jsonify({'error': f'[step1-download] {e}', 'trace': traceback.format_exc()[-600:]}), 500
-
-        # 2. Remove background
-        try:
-            nobg_bytes = remove_background(original_bytes, api_key)
-        except Exception as e:
-            import traceback
-            return jsonify({'error': f'[step2-remove-bg] {e}', 'trace': traceback.format_exc()[-600:]}), 500
-
-        # 3. Generate line art
-        try:
-            lineart_bytes = generate_line_art(nobg_bytes, api_key)
-        except Exception as e:
-            import traceback
-            return jsonify({'error': f'[step3-lineart] {e}', 'trace': traceback.format_exc()[-600:]}), 500
-
-        # 4. Return as base64 PNG
-        return jsonify({
-            'success':           True,
-            'sketch_png_base64': base64.b64encode(lineart_bytes).decode(),
-            'note':              'Stability AI: remove-background → structure-control line art',
-        })
-
+        req = urllib.request.Request(
+            photo_url, headers={'User-Agent': 'Mozilla/5.0 SoulmateAPI/6'})
+        with urllib.request.urlopen(req, timeout=60) as r:
+            photo_bytes = r.read()
     except Exception as e:
         import traceback
-        return jsonify({
-            'error': str(e),
-            'trace': traceback.format_exc()[-800:],
-        }), 500
+        return jsonify({'error': f'[step1-download] {e}',
+                        'trace': traceback.format_exc()[-600:]}), 500
+
+    # 2. Generate line art via Replicate
+    try:
+        lineart_bytes = generate_line_art(photo_bytes, replicate_token)
+    except Exception as e:
+        import traceback
+        return jsonify({'error': f'[step2-replicate] {e}',
+                        'trace': traceback.format_exc()[-600:]}), 500
+
+    return jsonify({
+        'success':           True,
+        'sketch_png_base64': base64.b64encode(lineart_bytes).decode(),
+        'note':              'Replicate SDXL img2img — pen & ink line art',
+    })
 
 
 if __name__ == '__main__':
