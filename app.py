@@ -1,187 +1,249 @@
 from flask import Flask, request, jsonify
-import urllib.request, base64, json, os, time, io
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+import urllib.request, base64, os, tempfile, io
+import fal_client
+import requests as http_requests
+from PIL import Image
+import numpy as np
 
 app = Flask(__name__)
 
-# ---------------------------------------------------------------------------
-# ControlNet Scribble — photo → edge map → fine ink line art portrait
-# jagilley/controlnet-scribble on Replicate
-# ---------------------------------------------------------------------------
-
-CONTROLNET_VERSION = '435061a1b5a4c1e26740464bf786efdfa9cb3a3ac488595a2de23e143fdb0117'
-
-LINE_ART_PROMPT = (
-    'clean line art portrait illustration, fine single ink outlines, '
-    'romantic couple portrait, beautiful detailed faces and hair, '
-    'smooth flowing ink lines on cream paper, sepia brown ink, '
-    'professional portrait sketch, no shading, no fill, no cross-hatching, '
-    'pure clean outlines only, high detail line drawing'
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=[],
+    storage_uri='memory://'
 )
 
-LINE_ART_NEGATIVE = (
-    'color, colorful, photograph, photorealistic, blurry, low quality, '
-    'bad anatomy, distorted faces, watercolor, painting, digital art, '
-    'extra fingers, deformed'
+PROMPT = (
+    'Convert to a clean fine line art portrait drawing. '
+    'Single weight black outlines only on pure white background. '
+    'No shading, no cross-hatching, no texture fills, no grey tones. '
+    'Clean coloring book style outlines. 2K resolution.'
 )
 
-
-# ---------------------------------------------------------------------------
-# Step 1 — edge extraction (pure PIL, no external API)
-# ---------------------------------------------------------------------------
-
-def extract_edges(image_bytes: bytes) -> bytes:
-    """Convert photo to a high-contrast edge/scribble map for ControlNet."""
-    from PIL import Image, ImageFilter, ImageOps, ImageEnhance
-
-    img = Image.open(io.BytesIO(image_bytes)).convert('RGB')
-
-    # ControlNet scribble works best at 512 × 512
-    img = img.resize((512, 512), Image.LANCZOS)
-
-    # Grayscale → slight blur to reduce photo noise
-    gray = img.convert('L')
-    gray = gray.filter(ImageFilter.GaussianBlur(radius=1.5))
-
-    # Edge detection
-    edges = gray.filter(ImageFilter.FIND_EDGES)
-
-    # Boost contrast so lines are clear
-    edges = ImageEnhance.Contrast(edges).enhance(5.0)
-
-    # Invert: white background, black lines (ControlNet scribble convention)
-    edges = ImageOps.invert(edges)
-
-    # Back to RGB for the model
-    edges = edges.convert('RGB')
-
-    buf = io.BytesIO()
-    edges.save(buf, format='PNG')
-    return buf.getvalue()
+PRINTFUL_KEY = os.environ.get('PRINTFUL_KEY')
 
 
-# ---------------------------------------------------------------------------
-# Step 2 — ControlNet Replicate call
-# ---------------------------------------------------------------------------
+def add_cors(response):
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    return response
 
-def generate_line_art(image_bytes: bytes, replicate_token: str) -> bytes:
-    """Extract edges, then run ControlNet Scribble to produce ink line art."""
+app.after_request(add_cors)
 
-    edge_bytes = extract_edges(image_bytes)
-    img_data_url = (
-        'data:image/png;base64,'
-        + base64.b64encode(edge_bytes).decode()
+
+def generate_line_art(photo_url: str):
+    result = fal_client.run(
+        'fal-ai/nano-banana-pro/edit',
+        arguments={
+            'image_urls': [photo_url],
+            'prompt': PROMPT,
+            'resolution': '2K',
+        }
     )
-
-    payload = {
-        'version': CONTROLNET_VERSION,
-        'input': {
-            'image':             img_data_url,
-            'prompt':            LINE_ART_PROMPT,
-            'negative_prompt':   LINE_ART_NEGATIVE,
-            'num_samples':       '1',
-            'image_resolution':  '512',
-            'ddim_steps':        40,
-            'scale':             9.0,
-            'eta':               0.0,
-        },
-    }
-
-    # Create prediction
-    req = urllib.request.Request(
-        'https://api.replicate.com/v1/predictions',
-        data=json.dumps(payload).encode(),
-        headers={
-            'Authorization': f'Token {replicate_token}',
-            'Content-Type':  'application/json',
-        },
-        method='POST',
-    )
-    with urllib.request.urlopen(req, timeout=30) as r:
-        prediction = json.loads(r.read())
-
-    if prediction.get('error'):
-        raise RuntimeError(f'Replicate create error: {prediction["error"]}')
-
-    poll_url = f'https://api.replicate.com/v1/predictions/{prediction["id"]}'
-
-    # Poll (up to 3 minutes)
-    for _ in range(90):
-        time.sleep(2)
-        req = urllib.request.Request(
-            poll_url,
-            headers={'Authorization': f'Token {replicate_token}'},
-        )
-        with urllib.request.urlopen(req, timeout=30) as r:
-            prediction = json.loads(r.read())
-
-        status = prediction.get('status')
-        if status == 'succeeded':
-            output = prediction.get('output', [])
-            output_url = output[0] if isinstance(output, list) and output else output
-            if not output_url:
-                raise RuntimeError('Replicate returned empty output')
-            with urllib.request.urlopen(output_url, timeout=60) as r:
-                return r.read()
-        elif status in ('failed', 'canceled'):
-            raise RuntimeError(
-                f'Replicate prediction {status}: {prediction.get("error", "unknown")}'
-            )
-
-    raise RuntimeError('Replicate prediction timed out after 3 minutes')
+    out_url = result['images'][0]['url']
+    req = urllib.request.Request(out_url, headers={'User-Agent': 'SoulmateAPI/13'})
+    with urllib.request.urlopen(req, timeout=120) as r:
+        return out_url, r.read()
 
 
-# ---------------------------------------------------------------------------
-# Routes
-# ---------------------------------------------------------------------------
+def process_line_art(img_bytes: bytes, on_dark: bool) -> bytes:
+    """Convert line art to transparent PNG for dark or light products.
+    - on_dark=True:  invert (black→white lines) + make near-black transparent
+    - on_dark=False: keep black lines + make near-white transparent
+    """
+    img = Image.open(io.BytesIO(img_bytes)).convert('RGBA')
+    data = np.array(img, dtype=np.uint8)
+
+    if on_dark:
+        # Invert RGB so black lines become white
+        data[:, :, :3] = 255 - data[:, :, :3]
+        # Original white background is now black — make it transparent
+        r, g, b = data[:, :, 0], data[:, :, 1], data[:, :, 2]
+        mask = (r < 60) & (g < 60) & (b < 60)
+        data[mask, 3] = 0
+    else:
+        # Make near-white background transparent, keep dark lines
+        r, g, b = data[:, :, 0], data[:, :, 1], data[:, :, 2]
+        mask = (r > 200) & (g > 200) & (b > 200)
+        data[mask, 3] = 0
+
+    out = io.BytesIO()
+    Image.fromarray(data).save(out, 'PNG')
+    return out.getvalue()
+
 
 @app.route('/', methods=['GET'])
 @app.route('/api/process', methods=['GET'])
 def health():
     return jsonify({
-        'status':   'ok',
-        'service':  'Soulmate Custom Gifts — Photo Outline API v7',
-        'pipeline': 'PIL edge extraction → ControlNet Scribble → pen & ink portrait',
+        'status': 'ok',
+        'service': 'Soulmate Custom Gifts — Photo Outline API v13',
+        'pipeline': 'fal.ai nano-banana-pro/edit → fine line drawing + Printful mockups'
     })
 
 
+@app.route('/upload', methods=['OPTIONS', 'POST'])
+def upload():
+    if request.method == 'OPTIONS':
+        return '', 200
+
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file provided'}), 400
+
+    file = request.files['file']
+    if not file.filename:
+        return jsonify({'error': 'No file selected'}), 400
+
+    if not os.environ.get('FAL_KEY'):
+        return jsonify({'error': 'Missing FAL_KEY env var'}), 400
+
+    ext = os.path.splitext(file.filename)[1] or '.jpg'
+    with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
+        file.save(tmp.name)
+        tmp_path = tmp.name
+
+    try:
+        url = fal_client.upload_file(tmp_path)
+        return jsonify({'success': True, 'url': url})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        os.unlink(tmp_path)
+
+
 @app.route('/api/process', methods=['POST'])
+@limiter.limit('5 per hour')
 def process():
     data = request.get_json(silent=True)
     if not data:
         return jsonify({'error': 'Invalid JSON body'}), 400
-
     photo_url = data.get('photo_url')
     if not photo_url:
         return jsonify({'error': 'Missing photo_url'}), 400
-
-    replicate_token = data.get('replicate_token') or os.environ.get('REPLICATE_API_TOKEN', '')
-    if not replicate_token:
-        return jsonify({'error': 'Missing REPLICATE_API_TOKEN env var'}), 400
-
-    # 1. Download photo
+    if not os.environ.get('FAL_KEY'):
+        return jsonify({'error': 'Missing FAL_KEY env var'}), 400
     try:
-        req = urllib.request.Request(
-            photo_url, headers={'User-Agent': 'Mozilla/5.0 SoulmateAPI/7'})
-        with urllib.request.urlopen(req, timeout=60) as r:
-            photo_bytes = r.read()
+        line_art_url, lineart_bytes = generate_line_art(photo_url)
     except Exception as e:
         import traceback
-        return jsonify({'error': f'[step1-download] {e}',
-                        'trace': traceback.format_exc()[-600:]}), 500
-
-    # 2. Edge extract + ControlNet line art
-    try:
-        lineart_bytes = generate_line_art(photo_bytes, replicate_token)
-    except Exception as e:
-        import traceback
-        return jsonify({'error': f'[step2-controlnet] {e}',
-                        'trace': traceback.format_exc()[-600:]}), 500
-
+        return jsonify({'error': f'[fal-nano-banana-pro] {e}',
+                        'trace': traceback.format_exc()[-800:]}), 500
     return jsonify({
-        'success':           True,
+        'success': True,
+        'line_art_url': line_art_url,
         'sketch_png_base64': base64.b64encode(lineart_bytes).decode(),
-        'note':              'ControlNet Scribble — fine pen & ink line art portrait',
+        'note': 'fal.ai nano-banana-pro/edit — fine line drawing'
     })
+
+
+@app.route('/mockup/start', methods=['OPTIONS', 'POST'])
+def mockup_start():
+    """Process line art + start Printful mockup task. Returns task_key for polling."""
+    if request.method == 'OPTIONS':
+        return '', 200
+
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({'error': 'Invalid JSON'}), 400
+
+    line_art_url = data.get('line_art_url')
+    product_id   = data.get('product_id')
+    variant_ids  = data.get('variant_ids')   # list of ints
+    on_dark      = data.get('on_dark', False)
+
+    if not all([line_art_url, product_id, variant_ids]):
+        return jsonify({'error': 'Missing required fields: line_art_url, product_id, variant_ids'}), 400
+
+    if not PRINTFUL_KEY:
+        return jsonify({'error': 'Missing PRINTFUL_KEY env var'}), 400
+
+    if not os.environ.get('FAL_KEY'):
+        return jsonify({'error': 'Missing FAL_KEY env var'}), 400
+
+    try:
+        # 1. Download line art
+        req = urllib.request.Request(line_art_url, headers={'User-Agent': 'SoulmateAPI/13'})
+        with urllib.request.urlopen(req, timeout=60) as r:
+            img_bytes = r.read()
+
+        # 2. Process to transparent PNG (white or inverted lines)
+        processed = process_line_art(img_bytes, on_dark)
+
+        # 3. Upload processed PNG to fal.ai CDN so Printful can fetch it
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as tmp:
+            tmp.write(processed)
+            tmp_path = tmp.name
+
+        design_url = fal_client.upload_file(tmp_path)
+        os.unlink(tmp_path)
+
+        # 4. Create Printful mockup task
+        task_payload = {
+            'variant_ids': variant_ids,
+            'files': [{'placement': 'default', 'image_url': design_url}],
+            'format': 'jpg'
+        }
+
+        resp = http_requests.post(
+            f'https://api.printful.com/mockup-generator/create-task/{product_id}',
+            headers={'Authorization': f'Bearer {PRINTFUL_KEY}'},
+            json=task_payload,
+            timeout=30
+        )
+
+        resp_data = resp.json()
+        if resp_data.get('code') != 200:
+            return jsonify({'error': f'Printful error: {resp_data}'}), 500
+
+        task_key = resp_data['result']['task_key']
+        return jsonify({'success': True, 'task_key': task_key})
+
+    except Exception as e:
+        import traceback
+        return jsonify({'error': str(e), 'trace': traceback.format_exc()[-800:]}), 500
+
+
+@app.route('/mockup/poll', methods=['GET'])
+def mockup_poll():
+    """Poll Printful mockup task. Returns status + mockup_urls when completed."""
+    task_key = request.args.get('task_key')
+    if not task_key:
+        return jsonify({'error': 'Missing task_key'}), 400
+    if not PRINTFUL_KEY:
+        return jsonify({'error': 'Missing PRINTFUL_KEY env var'}), 400
+
+    try:
+        resp = http_requests.get(
+            f'https://api.printful.com/mockup-generator/task?task_key={task_key}',
+            headers={'Authorization': f'Bearer {PRINTFUL_KEY}'},
+            timeout=15
+        )
+        result = resp.json().get('result', {})
+        status = result.get('status', 'unknown')
+
+        if status == 'completed':
+            mockups = result.get('mockups', [])
+            urls = [m['mockup_url'] for m in mockups[:3]]
+            return jsonify({'status': 'completed', 'mockup_urls': urls})
+        elif status == 'failed':
+            return jsonify({'status': 'failed', 'error': 'Mockup generation failed'}), 500
+        else:
+            return jsonify({'status': status})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.errorhandler(429)
+def rate_limit_exceeded(e):
+    return jsonify({
+        'error': 'rate_limited',
+        'message': "You've used your 5 free previews for this hour. Please try again later or contact us for help."
+    }), 429
 
 
 if __name__ == '__main__':
