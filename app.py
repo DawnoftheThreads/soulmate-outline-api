@@ -27,6 +27,26 @@ PRINTFUL_KEY       = os.environ.get('PRINTFUL_KEY')        # mockup token (read 
 PRINTFUL_ORDER_KEY = os.environ.get('PRINTFUL_ORDER_KEY')  # orders write token
 SHOPIFY_WEBHOOK_SECRET = os.environ.get('SHOPIFY_WEBHOOK_SECRET', '')
 
+# ── Per-product placement for Printful Mockup Generator API ───────────────
+# GET /mockup-generator/printfiles/{product_id} lists valid placements per product.
+# Apparel uses 'front'; flat/wrap products use 'default'.
+PRODUCT_PLACEMENT = {
+    1:   'front',    # Art Print (poster)
+    3:   'default',  # Canvas Print (stretched canvas)
+    19:  'default',  # White Mug (11 oz / 15 oz)
+    71:  'front',    # Bella+Canvas 3001 T-Shirt
+    145: 'front',    # Gildan 18000 Sweatshirt
+    214: 'front',    # Throw Pillow
+    234: 'front',    # Baby Bodysuit
+    367: 'front',    # Tote Bag
+    380: 'front',    # Gildan 18500 Hoodie
+    594: 'front',    # Gym Bag
+    678: 'default',  # Pet Bowl
+    683: 'front',    # Phone Case
+    711: 'front',    # Sherpa Blanket
+    902: 'front',    # Pet Bandana Collar
+}
+
 # ── Shopify variant ID → Printful variant + dark-product flag ──────────────
 # dark=True  → invert image (white lines on black/dark substrate)
 # dark=False → keep black lines on white/light substrate
@@ -60,21 +80,21 @@ VARIANT_MAP = {
     58292449313152: {'variant_id': 10457, 'on_dark': True},   # Black
 
     # ── Canvas Print (product 3) ──────────────────────────────────────────
-    58303853429120: {'variant_id': 823,   'on_dark': False},  # 12×12 in
-    58303853461888: {'variant_id': 5,     'on_dark': False},  # 12×16 in
-    58303853494656: {'variant_id': 6,     'on_dark': False},  # 16×20 in
-    58303853527424: {'variant_id': 7,     'on_dark': False},  # 18×24 in
-    58303853560192: {'variant_id': 825,   'on_dark': False},  # 24×36 in
+    58303853429120: {'variant_id': 823,   'on_dark': False},  # 12x12 in
+    58303853461888: {'variant_id': 5,     'on_dark': False},  # 12x16 in
+    58303853494656: {'variant_id': 6,     'on_dark': False},  # 16x20 in
+    58303853527424: {'variant_id': 7,     'on_dark': False},  # 18x24 in
+    58303853560192: {'variant_id': 825,   'on_dark': False},  # 24x36 in
 
     # ── Throw Pillow (product 214) ────────────────────────────────────────
-    58303853625728: {'variant_id': 7907,  'on_dark': False},  # 20×12 in
-    58303853658496: {'variant_id': 9515,  'on_dark': False},  # 18×18 in
-    58303853691264: {'variant_id': 11077, 'on_dark': False},  # 22×22 in
+    58303853625728: {'variant_id': 7907,  'on_dark': False},  # 20x12 in
+    58303853658496: {'variant_id': 9515,  'on_dark': False},  # 18x18 in
+    58303853691264: {'variant_id': 11077, 'on_dark': False},  # 22x22 in
 
     # ── Sherpa Blanket (product 711) ──────────────────────────────────────
-    58303853855104: {'variant_id': 17483, 'on_dark': False},  # 37×57 in
-    58303853887872: {'variant_id': 17482, 'on_dark': False},  # 50×60 in
-    58303853920640: {'variant_id': 17449, 'on_dark': False},  # 60×80 in
+    58303853855104: {'variant_id': 17483, 'on_dark': False},  # 37x57 in
+    58303853887872: {'variant_id': 17482, 'on_dark': False},  # 50x60 in
+    58303853920640: {'variant_id': 17449, 'on_dark': False},  # 60x80 in
 
     # ── Pet Bandana Collar (product 902) ──────────────────────────────────
     58303853953408: {'variant_id': 23142, 'on_dark': False},  # S
@@ -85,6 +105,64 @@ VARIANT_MAP = {
     # ── Pet Bowl (product 678) ────────────────────────────────────────────
     58303854084480: {'variant_id': 16785, 'on_dark': False},  # 18 oz
     58303854117248: {'variant_id': 16786, 'on_dark': False},  # 32 oz
+
+    # ── Baby Bodysuit (product 234) ───────────────────────────────────────
+    58318328758656: {'variant_id': 8177,  'on_dark': True},   # Black / 12M
+    58318328791424: {'variant_id': 8178,  'on_dark': True},   # Black / 18M
+    58318328824192: {'variant_id': 8179,  'on_dark': True},   # Black / 24M
+    58318328856960: {'variant_id': 8182,  'on_dark': False},  # Heather / 12M
+    58318328889728: {'variant_id': 8183,  'on_dark': False},  # Heather / 18M
+    58318328922496: {'variant_id': 8184,  'on_dark': False},  # Heather / 24M
+    58318328955264: {'variant_id': 8187,  'on_dark': False},  # Pink / 12M
+    58318328988032: {'variant_id': 8188,  'on_dark': False},  # Pink / 18M
+    58318329020800: {'variant_id': 8189,  'on_dark': False},  # Pink / 24M
+    58318329053568: {'variant_id': 8172,  'on_dark': False},  # White / 12M
+    58318329086336: {'variant_id': 8173,  'on_dark': False},  # White / 18M
+    58318329119104: {'variant_id': 8174,  'on_dark': False},  # White / 24M
+
+    # ── Gym Bag (product 594) ─────────────────────────────────────────────
+    58318329151872: {'variant_id': 15155, 'on_dark': False},  # One Size
+
+    # ── Art Print (product 1) ─────────────────────────────────────────────
+    58318329184640: {'variant_id': 4463,  'on_dark': False},  # 8x10 in
+    58318329217408: {'variant_id': 1349,  'on_dark': False},  # 12x16 in
+    58318329250176: {'variant_id': 3877,  'on_dark': False},  # 16x20 in
+    58318329282944: {'variant_id': 1,     'on_dark': False},  # 18x24 in
+    58318329315712: {'variant_id': 2,     'on_dark': False},  # 24x36 in
+
+    # ── Phone Case (product 683) ──────────────────────────────────────────
+    58318329708928: {'variant_id': 16910, 'on_dark': False},  # iPhone 14 / Glossy
+    58318329741696: {'variant_id': 16911, 'on_dark': False},  # iPhone 14 / Matte
+    58318329774464: {'variant_id': 16912, 'on_dark': False},  # iPhone 14 Pro / Glossy
+    58318329807232: {'variant_id': 16913, 'on_dark': False},  # iPhone 14 Pro / Matte
+    58318329840000: {'variant_id': 16914, 'on_dark': False},  # iPhone 14 Plus / Glossy
+    58318329872768: {'variant_id': 16915, 'on_dark': False},  # iPhone 14 Plus / Matte
+    58318329905536: {'variant_id': 16916, 'on_dark': False},  # iPhone 14 Pro Max / Glossy
+    58318329938304: {'variant_id': 16917, 'on_dark': False},  # iPhone 14 Pro Max / Matte
+    58318329971072: {'variant_id': 17722, 'on_dark': False},  # iPhone 15 / Glossy
+    58318330003840: {'variant_id': 17723, 'on_dark': False},  # iPhone 15 / Matte
+    58318330036608: {'variant_id': 17726, 'on_dark': False},  # iPhone 15 Pro / Glossy
+    58318330069376: {'variant_id': 17727, 'on_dark': False},  # iPhone 15 Pro / Matte
+    58318330102144: {'variant_id': 17724, 'on_dark': False},  # iPhone 15 Plus / Glossy
+    58318330134912: {'variant_id': 17725, 'on_dark': False},  # iPhone 15 Plus / Matte
+    58318330167680: {'variant_id': 17728, 'on_dark': False},  # iPhone 15 Pro Max / Glossy
+    58318330200448: {'variant_id': 17729, 'on_dark': False},  # iPhone 15 Pro Max / Matte
+    58318330233216: {'variant_id': 20294, 'on_dark': False},  # iPhone 16 / Glossy
+    58318330265984: {'variant_id': 20298, 'on_dark': False},  # iPhone 16 / Matte
+    58318330298752: {'variant_id': 20296, 'on_dark': False},  # iPhone 16 Pro / Glossy
+    58318330331520: {'variant_id': 20300, 'on_dark': False},  # iPhone 16 Pro / Matte
+    58318330364288: {'variant_id': 20295, 'on_dark': False},  # iPhone 16 Plus / Glossy
+    58318330397056: {'variant_id': 20299, 'on_dark': False},  # iPhone 16 Plus / Matte
+    58318330429824: {'variant_id': 20297, 'on_dark': False},  # iPhone 16 Pro Max / Glossy
+    58318330462592: {'variant_id': 20301, 'on_dark': False},  # iPhone 16 Pro Max / Matte
+    58318330495360: {'variant_id': 34009, 'on_dark': False},  # iPhone 17 / Glossy
+    58318330528128: {'variant_id': 34010, 'on_dark': False},  # iPhone 17 / Matte
+    58318330560896: {'variant_id': 34013, 'on_dark': False},  # iPhone 17 Pro / Glossy
+    58318330593664: {'variant_id': 34014, 'on_dark': False},  # iPhone 17 Pro / Matte
+    58318330626432: {'variant_id': 34011, 'on_dark': False},  # iPhone 17 Air / Glossy
+    58318330659200: {'variant_id': 34012, 'on_dark': False},  # iPhone 17 Air / Matte
+    58318330691968: {'variant_id': 34015, 'on_dark': False},  # iPhone 17 Pro Max / Glossy
+    58318330724736: {'variant_id': 34016, 'on_dark': False},  # iPhone 17 Pro Max / Matte
 }
 
 
@@ -107,14 +185,14 @@ def generate_line_art(photo_url: str):
         }
     )
     out_url = result['images'][0]['url']
-    req = urllib.request.Request(out_url, headers={'User-Agent': 'SoulmateAPI/14'})
+    req = urllib.request.Request(out_url, headers={'User-Agent': 'SoulmateAPI/15'})
     with urllib.request.urlopen(req, timeout=120) as r:
         return out_url, r.read()
 
 
 def process_line_art(img_bytes: bytes, on_dark: bool) -> bytes:
     """Convert line art to transparent PNG for dark or light products.
-    - on_dark=True:  invert (black→white lines) + make near-black transparent
+    - on_dark=True:  invert (black->white lines) + make near-black transparent
     - on_dark=False: keep black lines + make near-white transparent
     """
     img = Image.open(io.BytesIO(img_bytes)).convert('RGBA')
@@ -137,7 +215,7 @@ def process_line_art(img_bytes: bytes, on_dark: bool) -> bytes:
 
 def prepare_design_url(line_art_url: str, on_dark: bool) -> str:
     """Download line art, process it, upload to fal CDN, return public URL."""
-    req = urllib.request.Request(line_art_url, headers={'User-Agent': 'SoulmateAPI/14'})
+    req = urllib.request.Request(line_art_url, headers={'User-Agent': 'SoulmateAPI/15'})
     with urllib.request.urlopen(req, timeout=60) as r:
         img_bytes = r.read()
 
@@ -153,17 +231,17 @@ def prepare_design_url(line_art_url: str, on_dark: bool) -> str:
         os.unlink(tmp_path)
 
 
-# ═══════════════════════════════════════════════════════════════════════════
+# ============================================================================
 # ROUTES
-# ═══════════════════════════════════════════════════════════════════════════
+# ============================================================================
 
 @app.route('/', methods=['GET'])
 @app.route('/api/process', methods=['GET'])
 def health():
     return jsonify({
         'status': 'ok',
-        'service': 'Soulmate Custom Gifts — Photo Outline API v14',
-        'pipeline': 'fal.ai nano-banana-pro/edit → fine line drawing + Printful mockups + order fulfillment'
+        'service': 'Soulmate Custom Gifts — Photo Outline API v15',
+        'pipeline': 'fal.ai nano-banana-pro/edit -> fine line drawing + Printful mockups + order fulfillment'
     })
 
 
@@ -217,7 +295,7 @@ def process():
         'success': True,
         'line_art_url': line_art_url,
         'sketch_png_base64': base64.b64encode(lineart_bytes).decode(),
-        'note': 'fal.ai nano-banana-pro/edit — fine line drawing'
+        'note': 'fal.ai nano-banana-pro/edit -- fine line drawing'
     })
 
 
@@ -248,9 +326,12 @@ def mockup_start():
     try:
         design_url = prepare_design_url(line_art_url, on_dark)
 
+        # Use product-specific placement — apparel needs 'front', flat/wrap products use 'default'
+        placement = PRODUCT_PLACEMENT.get(product_id, 'front')
+
         task_payload = {
             'variant_ids': variant_ids,
-            'files': [{'placement': 'default', 'image_url': design_url}],
+            'files': [{'placement': placement, 'image_url': design_url}],
             'format': 'jpg'
         }
 
@@ -315,7 +396,7 @@ def shopify_order_webhook():
     """
     raw_body = request.data
 
-    # ── 1. Verify Shopify HMAC signature ──────────────────────────────────
+    # 1. Verify Shopify HMAC signature
     if SHOPIFY_WEBHOOK_SECRET:
         hmac_header = request.headers.get('X-Shopify-Hmac-Sha256', '')
         digest = hmac.new(
@@ -325,12 +406,12 @@ def shopify_order_webhook():
         ).digest()
         computed = base64.b64encode(digest).decode('utf-8')
         if not hmac.compare_digest(computed, hmac_header):
-            print('[webhook/order] HMAC verification failed — rejecting')
+            print('[webhook/order] HMAC verification failed -- rejecting')
             return jsonify({'error': 'Invalid signature'}), 401
     else:
-        print('[webhook/order] WARNING: SHOPIFY_WEBHOOK_SECRET not set — skipping HMAC check')
+        print('[webhook/order] WARNING: SHOPIFY_WEBHOOK_SECRET not set -- skipping HMAC check')
 
-    # ── 2. Parse order ─────────────────────────────────────────────────────
+    # 2. Parse order
     try:
         order = json.loads(raw_body)
     except Exception:
@@ -340,10 +421,10 @@ def shopify_order_webhook():
     order_name = order.get('name', f'#{order_id}')
     print(f'[webhook/order] Received order {order_name} (id={order_id})')
 
-    # ── 3. Build Printful recipient ────────────────────────────────────────
+    # 3. Build Printful recipient
     addr = order.get('shipping_address') or order.get('billing_address', {})
     if not addr:
-        print(f'[webhook/order] Order {order_name} has no shipping address — skipping')
+        print(f'[webhook/order] Order {order_name} has no shipping address -- skipping')
         return '', 200
 
     recipient = {
@@ -358,7 +439,7 @@ def shopify_order_webhook():
         'email':        order.get('email', ''),
     }
 
-    # ── 4. Process each line item ──────────────────────────────────────────
+    # 4. Process each line item
     printful_items = []
     skipped        = []
     errors         = []
@@ -369,7 +450,6 @@ def shopify_order_webhook():
             skipped.append('item with no variant_id')
             continue
 
-        # Extract line art URL from line item properties
         props = {p['name']: p['value'] for p in item.get('properties', [])}
         line_art_url = props.get('Line Art Preview', '').strip()
 
@@ -377,7 +457,6 @@ def shopify_order_webhook():
             skipped.append(f"variant {shopify_variant_id} (no Line Art Preview property)")
             continue
 
-        # Map Shopify variant → Printful variant
         mapping = VARIANT_MAP.get(int(shopify_variant_id))
         if not mapping:
             errors.append(f"Unknown Shopify variant ID {shopify_variant_id}")
@@ -386,7 +465,6 @@ def shopify_order_webhook():
         printful_variant_id = mapping['variant_id']
         on_dark             = mapping['on_dark']
 
-        # Process line art and upload to CDN
         try:
             design_url = prepare_design_url(line_art_url, on_dark)
         except Exception as e:
@@ -408,21 +486,21 @@ def shopify_order_webhook():
     if errors:
         print(f'[webhook/order] Errors: {errors}')
 
-    # ── 5. Place draft Printful order ──────────────────────────────────────
+    # 5. Place draft Printful order
     if not printful_items:
         print(f'[webhook/order] Nothing to submit to Printful for order {order_name}')
         return '', 200
 
     order_key = PRINTFUL_ORDER_KEY or PRINTFUL_KEY
     if not order_key:
-        print('[webhook/order] No Printful API key available — cannot create order')
+        print('[webhook/order] No Printful API key available -- cannot create order')
         return '', 200
 
     payload = {
         'external_id': str(order_id),
         'recipient':   recipient,
         'items':       printful_items,
-        'confirm':     False,   # Draft — review in Printful dashboard before confirming
+        'confirm':     False,
         'retail_costs': {
             'currency': order.get('currency', 'GBP'),
             'total':    order.get('total_price'),
@@ -439,14 +517,13 @@ def shopify_order_webhook():
         result = resp.json()
         if result.get('code') == 200:
             pf_order_id = result['result']['id']
-            print(f'[webhook/order] ✅ Printful draft order created: id={pf_order_id} '
+            print(f'[webhook/order] Printful draft order created: id={pf_order_id} '
                   f'for Shopify order {order_name}')
         else:
-            print(f'[webhook/order] ❌ Printful error for order {order_name}: {result}')
+            print(f'[webhook/order] Printful error for order {order_name}: {result}')
     except Exception as e:
-        print(f'[webhook/order] ❌ Printful API call failed for order {order_name}: {e}')
+        print(f'[webhook/order] Printful API call failed for order {order_name}: {e}')
 
-    # Always return 200 — Shopify retries on any other code
     return '', 200
 
 
