@@ -47,6 +47,9 @@ PRODUCT_PLACEMENT = {
     902: 'front',    # Pet Bandana Collar
 }
 
+# Cache: (product_id, placement) → position dict fetched from Printful printfiles API
+_printfile_cache = {}
+
 # ── Shopify variant ID → Printful variant + dark-product flag ──────────────
 # dark=True  → invert image (white lines on black/dark substrate)
 # dark=False → keep black lines on white/light substrate
@@ -231,6 +234,53 @@ def prepare_design_url(line_art_url: str, on_dark: bool) -> str:
         os.unlink(tmp_path)
 
 
+def get_position_for_product(product_id: int, placement: str) -> dict:
+    """Fetch print area dimensions from Printful printfiles API (cached per product/placement)."""
+    cache_key = (product_id, placement)
+    if cache_key in _printfile_cache:
+        return _printfile_cache[cache_key]
+
+    pf = None
+    try:
+        resp = http_requests.get(
+            f'https://api.printful.com/mockup-generator/printfiles/{product_id}',
+            headers={'Authorization': f'Bearer {PRINTFUL_KEY}'},
+            timeout=15
+        )
+        data = resp.json()
+        printfiles = data.get('result', {}).get('printfiles', [])
+        pf = next((p for p in printfiles if p.get('placement') == placement), None)
+        if not pf and printfiles:
+            pf = printfiles[0]
+    except Exception:
+        pf = None
+
+    if pf and pf.get('width') and pf.get('height'):
+        position = {
+            'area_width':          pf['width'],
+            'area_height':         pf['height'],
+            'width':               pf['width'],
+            'height':              pf['height'],
+            'top':                 0,
+            'left':                0,
+            'limit_to_print_area': True,
+        }
+    else:
+        # Fallback: generic apparel dimensions (1800×2400 @ 150 DPI = 12"×16")
+        position = {
+            'area_width':          1800,
+            'area_height':         2400,
+            'width':               1800,
+            'height':              2400,
+            'top':                 0,
+            'left':                0,
+            'limit_to_print_area': True,
+        }
+
+    _printfile_cache[cache_key] = position
+    return position
+
+
 # ============================================================================
 # ROUTES
 # ============================================================================
@@ -240,7 +290,7 @@ def prepare_design_url(line_art_url: str, on_dark: bool) -> str:
 def health():
     return jsonify({
         'status': 'ok',
-        'service': 'Soulmate Custom Gifts — Photo Outline API v15',
+        'service': 'Soulmate Custom Gifts — Photo Outline API v16',
         'pipeline': 'fal.ai nano-banana-pro/edit -> fine line drawing + Printful mockups + order fulfillment'
     })
 
@@ -329,9 +379,12 @@ def mockup_start():
         # Use product-specific placement — apparel needs 'front', flat/wrap products use 'default'
         placement = PRODUCT_PLACEMENT.get(product_id, 'front')
 
+        # Fetch print area dimensions from Printful (cached after first call per product)
+        position = get_position_for_product(product_id, placement)
+
         task_payload = {
             'variant_ids': variant_ids,
-            'files': [{'placement': placement, 'image_url': design_url}],
+            'files': [{'placement': placement, 'image_url': design_url, 'position': position}],
             'format': 'jpg'
         }
 
