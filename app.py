@@ -195,6 +195,18 @@ def add_cors(response):
 app.after_request(add_cors)
 
 
+@app.route('/pf-templates/<int:pid>')
+def pf_templates(pid):
+    """DEBUG: proxy Printful mockup-generator templates — remove after data collection."""
+    import requests as _r
+    resp = _r.get(
+        f'https://api.printful.com/mockup-generator/templates/{pid}',
+        headers={'Authorization': f'Bearer {PRINTFUL_KEY}'},
+        timeout=30
+    )
+    return jsonify(resp.json())
+
+
 def generate_line_art(photo_url: str):
     result = fal_client.run(
         'fal-ai/nano-banana-pro/edit',
