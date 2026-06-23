@@ -535,7 +535,7 @@ def shopify_order_webhook():
             continue
 
         props = {p['name']: p['value'] for p in item.get('properties', [])}
-        line_art_url = props.get('Line Art Preview', '').strip()
+        line_art_url = props.get('_Line Art Preview', props.get('Line Art Preview', '')).strip()
 
         if not line_art_url:
             skipped.append(f"variant {shopify_variant_id} (no Line Art Preview property)")
