@@ -229,7 +229,10 @@ def process_line_art(img_bytes: bytes, on_dark: bool) -> bytes:
         # (from originally black lines) score near 255; everything else falls off.
         # gamma=2 pushes mid-grays toward transparent, sharpening the result.
         min_chan = np.minimum(np.minimum(r, g), b)
-        alpha = np.clip((min_chan / 255.0) ** 2.0 * 255.0, 0, 255).astype(np.uint8)
+        # Threshold at 40: any pixel brighter than ~16% gets full opacity.
+        # This ensures all line pixels (min_chan >> 40 after inversion) become
+        # fully opaque white, giving crisp bright lines in the Printful mockup.
+        alpha = np.clip(min_chan.astype(np.float32) * (255.0 / 40.0), 0, 255).astype(np.uint8)
         # Force RGB to pure white so no brownish/warm tint survives in Printful mockup
         data[:, :, :3] = 255
         data[:, :, 3] = alpha
