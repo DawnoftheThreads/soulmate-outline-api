@@ -60,6 +60,13 @@ VARIANT_MAP = {
     58292438303104: {'variant_id': 8924,  'on_dark': True},   # Black Heather / M
     58292438335872: {'variant_id': 8925,  'on_dark': True},   # Black Heather / L
     58292438368640: {'variant_id': 8926,  'on_dark': True},   # Black Heather / XL
+    58292438401408: {'variant_id': 8927,  'on_dark': True},   # Black Heather / 2XL
+    58292438434176: {'variant_id': 9526,  'on_dark': False},  # White / XS
+    58292438466944: {'variant_id': 4011,  'on_dark': False},  # White / S
+    58292438499712: {'variant_id': 4012,  'on_dark': False},  # White / M
+    58292438532480: {'variant_id': 4013,  'on_dark': False},  # White / L
+    58292438565248: {'variant_id': 4014,  'on_dark': False},  # White / XL
+    58292438598016: {'variant_id': 4015,  'on_dark': False},  # White / 2XL
 
     # ── Hoodie (product 380) ──────────────────────────────────────────────
     58292420542848: {'variant_id': 10779, 'on_dark': True},   # Black / S
@@ -67,6 +74,13 @@ VARIANT_MAP = {
     58292420608384: {'variant_id': 10781, 'on_dark': True},   # Black / L
     58292420641152: {'variant_id': 10782, 'on_dark': True},   # Black / XL
     58292420673920: {'variant_id': 10783, 'on_dark': True},   # Black / 2XL
+    58292420706688: {'variant_id': 13416, 'on_dark': True},   # Black / 3XL
+    58292420739456: {'variant_id': 10774, 'on_dark': False},  # White / S
+    58292420772224: {'variant_id': 10775, 'on_dark': False},  # White / M
+    58292420804992: {'variant_id': 10776, 'on_dark': False},  # White / L
+    58292420837760: {'variant_id': 10777, 'on_dark': False},  # White / XL
+    58292420870528: {'variant_id': 10778, 'on_dark': False},  # White / 2XL
+    58292420903296: {'variant_id': 13421, 'on_dark': False},  # White / 3XL
 
     # ── Sweatshirt (product 145) ──────────────────────────────────────────
     58292428538240: {'variant_id': 5434,  'on_dark': True},   # Black / S
@@ -74,6 +88,9 @@ VARIANT_MAP = {
     58292428603776: {'variant_id': 5436,  'on_dark': True},   # Black / L
     58292428636544: {'variant_id': 5437,  'on_dark': True},   # Black / XL
     58292428669312: {'variant_id': 5426,  'on_dark': False},  # White / S
+    58292428702080: {'variant_id': 5427,  'on_dark': False},  # White / M
+    58292428734848: {'variant_id': 5428,  'on_dark': False},  # White / L
+    58292428767616: {'variant_id': 5429,  'on_dark': False},  # White / XL
 
     # ── Mug (product 19) ─────────────────────────────────────────────────
     58292442759552: {'variant_id': 1320,  'on_dark': False},  # 11 oz
@@ -290,7 +307,7 @@ def get_position_for_product(product_id: int, placement: str) -> dict:
 def health():
     return jsonify({
         'status': 'ok',
-        'service': 'Soulmate Custom Gifts — Photo Outline API v16',
+        'service': 'Soulmate Custom Gifts — Photo Outline API v17',
         'pipeline': 'fal.ai nano-banana-pro/edit -> fine line drawing + Printful mockups + order fulfillment'
     })
 
@@ -359,10 +376,11 @@ def mockup_start():
     if not data:
         return jsonify({'error': 'Invalid JSON'}), 400
 
-    line_art_url = data.get('line_art_url')
-    product_id   = data.get('product_id')
-    variant_ids  = data.get('variant_ids')
-    on_dark      = data.get('on_dark', False)
+    line_art_url     = data.get('line_art_url')
+    product_id       = data.get('product_id')
+    variant_ids      = data.get('variant_ids')
+    on_dark          = data.get('on_dark', False)
+    custom_position  = data.get('position')   # optional: customer-chosen position from canvas
 
     if not all([line_art_url, product_id, variant_ids]):
         return jsonify({'error': 'Missing required fields: line_art_url, product_id, variant_ids'}), 400
@@ -379,8 +397,11 @@ def mockup_start():
         # Use product-specific placement — apparel needs 'front', flat/wrap products use 'default'
         placement = PRODUCT_PLACEMENT.get(product_id, 'front')
 
-        # Fetch print area dimensions from Printful (cached after first call per product)
-        position = get_position_for_product(product_id, placement)
+        # Use customer-chosen position if provided, otherwise fetch from Printful printfiles API
+        if custom_position:
+            position = custom_position
+        else:
+            position = get_position_for_product(product_id, placement)
 
         task_payload = {
             'variant_ids': variant_ids,
