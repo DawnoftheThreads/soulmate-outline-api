@@ -472,6 +472,22 @@ def mockup_poll():
         return jsonify({'error': str(e)}), 500
 
 
+@app.route('/pf-templates/<int:product_id>', methods=['GET'])
+def pf_templates(product_id):
+    """Proxy Printful mockup-generator/templates endpoint — temporary debug route."""
+    if not PRINTFUL_KEY:
+        return jsonify({'error': 'Missing PRINTFUL_KEY env var'}), 400
+    try:
+        resp = http_requests.get(
+            f'https://api.printful.com/mockup-generator/templates/{product_id}',
+            headers={'Authorization': f'Bearer {PRINTFUL_KEY}'},
+            timeout=15
+        )
+        return jsonify(resp.json())
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 @app.route('/webhook/order', methods=['POST'])
 def shopify_order_webhook():
     """
