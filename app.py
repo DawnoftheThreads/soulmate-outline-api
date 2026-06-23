@@ -97,7 +97,7 @@ VARIANT_MAP = {
     58321490772352: {'variant_id': 4830,  'on_dark': False},  # 15 oz
 
     # ── Tote Bag (product 367) ───────────────────────────────────────────
-    58292449313152: {'variant_id': 10457, 'on_dark': True},   # Black
+    58321530552704: {'variant_id': 10457, 'on_dark': True},   # Black
 
     # ── Canvas Print (product 3) ──────────────────────────────────────────
     58321490805120: {'variant_id': 823,   'on_dark': False},  # 12x12 in
@@ -117,72 +117,72 @@ VARIANT_MAP = {
     58321492935040: {'variant_id': 17449, 'on_dark': False},  # 60x80 in
 
     # ── Pet Bandana Collar (product 902) ──────────────────────────────────
-    58303853953408: {'variant_id': 23142, 'on_dark': False},  # S
-    58303853986176: {'variant_id': 23141, 'on_dark': False},  # M
-    58303854018944: {'variant_id': 23140, 'on_dark': False},  # L
-    58303854051712: {'variant_id': 23143, 'on_dark': False},  # XL
+    58321531175296: {'variant_id': 23142, 'on_dark': False},  # S
+    58321540809088: {'variant_id': 23141, 'on_dark': False},  # M
+    58321540841856: {'variant_id': 23140, 'on_dark': False},  # L
+    58321540874624: {'variant_id': 23143, 'on_dark': False},  # XL
 
     # ── Pet Bowl (product 678) ────────────────────────────────────────────
-    58303854084480: {'variant_id': 16785, 'on_dark': False},  # 18 oz
-    58303854117248: {'variant_id': 16786, 'on_dark': False},  # 32 oz
+    58321531535744: {'variant_id': 16785, 'on_dark': False},  # 18 oz
+    58321541104000: {'variant_id': 16786, 'on_dark': False},  # 32 oz
 
     # ── Baby Bodysuit (product 234) ───────────────────────────────────────
-    58318328758656: {'variant_id': 8177,  'on_dark': True},   # Black / 12M
-    58318328791424: {'variant_id': 8178,  'on_dark': True},   # Black / 18M
-    58318328824192: {'variant_id': 8179,  'on_dark': True},   # Black / 24M
-    58318328856960: {'variant_id': 8182,  'on_dark': False},  # Heather / 12M
-    58318328889728: {'variant_id': 8183,  'on_dark': False},  # Heather / 18M
-    58318328922496: {'variant_id': 8184,  'on_dark': False},  # Heather / 24M
-    58318328955264: {'variant_id': 8187,  'on_dark': False},  # Pink / 12M
-    58318328988032: {'variant_id': 8188,  'on_dark': False},  # Pink / 18M
-    58318329020800: {'variant_id': 8189,  'on_dark': False},  # Pink / 24M
-    58318329053568: {'variant_id': 8172,  'on_dark': False},  # White / 12M
-    58318329086336: {'variant_id': 8173,  'on_dark': False},  # White / 18M
-    58318329119104: {'variant_id': 8174,  'on_dark': False},  # White / 24M
+    58321531863424: {'variant_id': 8177,  'on_dark': True},   # Black / 12M
+    58321541267840: {'variant_id': 8178,  'on_dark': True},   # Black / 18M
+    58321541300608: {'variant_id': 8179,  'on_dark': True},   # Black / 24M
+    58321541333376: {'variant_id': 8182,  'on_dark': False},  # Heather / 12M
+    58321541366144: {'variant_id': 8183,  'on_dark': False},  # Heather / 18M
+    58321541398912: {'variant_id': 8184,  'on_dark': False},  # Heather / 24M
+    58321541431680: {'variant_id': 8187,  'on_dark': False},  # Pink / 12M
+    58321541464448: {'variant_id': 8188,  'on_dark': False},  # Pink / 18M
+    58321541497216: {'variant_id': 8189,  'on_dark': False},  # Pink / 24M
+    58321541529984: {'variant_id': 8172,  'on_dark': False},  # White / 12M
+    58321541562752: {'variant_id': 8173,  'on_dark': False},  # White / 18M
+    58321541595520: {'variant_id': 8174,  'on_dark': False},  # White / 24M
 
     # ── Gym Bag (product 594) ─────────────────────────────────────────────
-    58318329151872: {'variant_id': 15155, 'on_dark': False},  # One Size
+    58321531928960: {'variant_id': 15155, 'on_dark': False},  # One Size
 
     # ── Art Print (product 1) ─────────────────────────────────────────────
-    58318329184640: {'variant_id': 4463,  'on_dark': False},  # 8x10 in
-    58318329217408: {'variant_id': 1349,  'on_dark': False},  # 12x16 in
-    58318329250176: {'variant_id': 3877,  'on_dark': False},  # 16x20 in
-    58318329282944: {'variant_id': 1,     'on_dark': False},  # 18x24 in
-    58318329315712: {'variant_id': 2,     'on_dark': False},  # 24x36 in
+    58321538449792: {'variant_id': 4463,  'on_dark': False},  # 8x10 in
+    58321541726592: {'variant_id': 1349,  'on_dark': False},  # 12x16 in
+    58321541759360: {'variant_id': 3877,  'on_dark': False},  # 16x20 in
+    58321541792128: {'variant_id': 1,     'on_dark': False},  # 18x24 in
+    58321541824896: {'variant_id': 2,     'on_dark': False},  # 24x36 in
 
     # ── Phone Case (product 683) ──────────────────────────────────────────
-    58318329708928: {'variant_id': 16910, 'on_dark': False},  # iPhone 14 / Glossy
-    58318329741696: {'variant_id': 16911, 'on_dark': False},  # iPhone 14 / Matte
-    58318329774464: {'variant_id': 16912, 'on_dark': False},  # iPhone 14 Pro / Glossy
-    58318329807232: {'variant_id': 16913, 'on_dark': False},  # iPhone 14 Pro / Matte
-    58318329840000: {'variant_id': 16914, 'on_dark': False},  # iPhone 14 Plus / Glossy
-    58318329872768: {'variant_id': 16915, 'on_dark': False},  # iPhone 14 Plus / Matte
-    58318329905536: {'variant_id': 16916, 'on_dark': False},  # iPhone 14 Pro Max / Glossy
-    58318329938304: {'variant_id': 16917, 'on_dark': False},  # iPhone 14 Pro Max / Matte
-    58318329971072: {'variant_id': 17722, 'on_dark': False},  # iPhone 15 / Glossy
-    58318330003840: {'variant_id': 17723, 'on_dark': False},  # iPhone 15 / Matte
-    58318330036608: {'variant_id': 17726, 'on_dark': False},  # iPhone 15 Pro / Glossy
-    58318330069376: {'variant_id': 17727, 'on_dark': False},  # iPhone 15 Pro / Matte
-    58318330102144: {'variant_id': 17724, 'on_dark': False},  # iPhone 15 Plus / Glossy
-    58318330134912: {'variant_id': 17725, 'on_dark': False},  # iPhone 15 Plus / Matte
-    58318330167680: {'variant_id': 17728, 'on_dark': False},  # iPhone 15 Pro Max / Glossy
-    58318330200448: {'variant_id': 17729, 'on_dark': False},  # iPhone 15 Pro Max / Matte
-    58318330233216: {'variant_id': 20294, 'on_dark': False},  # iPhone 16 / Glossy
-    58318330265984: {'variant_id': 20298, 'on_dark': False},  # iPhone 16 / Matte
-    58318330298752: {'variant_id': 20296, 'on_dark': False},  # iPhone 16 Pro / Glossy
-    58318330331520: {'variant_id': 20300, 'on_dark': False},  # iPhone 16 Pro / Matte
-    58318330364288: {'variant_id': 20295, 'on_dark': False},  # iPhone 16 Plus / Glossy
-    58318330397056: {'variant_id': 20299, 'on_dark': False},  # iPhone 16 Plus / Matte
-    58318330429824: {'variant_id': 20297, 'on_dark': False},  # iPhone 16 Pro Max / Glossy
-    58318330462592: {'variant_id': 20301, 'on_dark': False},  # iPhone 16 Pro Max / Matte
-    58318330495360: {'variant_id': 34009, 'on_dark': False},  # iPhone 17 / Glossy
-    58318330528128: {'variant_id': 34010, 'on_dark': False},  # iPhone 17 / Matte
-    58318330560896: {'variant_id': 34013, 'on_dark': False},  # iPhone 17 Pro / Glossy
-    58318330593664: {'variant_id': 34014, 'on_dark': False},  # iPhone 17 Pro / Matte
-    58318330626432: {'variant_id': 34011, 'on_dark': False},  # iPhone 17 Air / Glossy
-    58318330659200: {'variant_id': 34012, 'on_dark': False},  # iPhone 17 Air / Matte
-    58318330691968: {'variant_id': 34015, 'on_dark': False},  # iPhone 17 Pro Max / Glossy
-    58318330724736: {'variant_id': 34016, 'on_dark': False},  # iPhone 17 Pro Max / Matte
+    58321538548096: {'variant_id': 16910, 'on_dark': False},  # iPhone 14 / Glossy
+    58321542218112: {'variant_id': 16911, 'on_dark': False},  # iPhone 14 / Matte
+    58321542250880: {'variant_id': 16912, 'on_dark': False},  # iPhone 14 Pro / Glossy
+    58321542283648: {'variant_id': 16913, 'on_dark': False},  # iPhone 14 Pro / Matte
+    58321542316416: {'variant_id': 16914, 'on_dark': False},  # iPhone 14 Plus / Glossy
+    58321542349184: {'variant_id': 16915, 'on_dark': False},  # iPhone 14 Plus / Matte
+    58321542381952: {'variant_id': 16916, 'on_dark': False},  # iPhone 14 Pro Max / Glossy
+    58321542414720: {'variant_id': 16917, 'on_dark': False},  # iPhone 14 Pro Max / Matte
+    58321542447488: {'variant_id': 17722, 'on_dark': False},  # iPhone 15 / Glossy
+    58321542480256: {'variant_id': 17723, 'on_dark': False},  # iPhone 15 / Matte
+    58321542513024: {'variant_id': 17726, 'on_dark': False},  # iPhone 15 Pro / Glossy
+    58321542545792: {'variant_id': 17727, 'on_dark': False},  # iPhone 15 Pro / Matte
+    58321542578560: {'variant_id': 17724, 'on_dark': False},  # iPhone 15 Plus / Glossy
+    58321542611328: {'variant_id': 17725, 'on_dark': False},  # iPhone 15 Plus / Matte
+    58321542644096: {'variant_id': 17728, 'on_dark': False},  # iPhone 15 Pro Max / Glossy
+    58321542676864: {'variant_id': 17729, 'on_dark': False},  # iPhone 15 Pro Max / Matte
+    58321542709632: {'variant_id': 20294, 'on_dark': False},  # iPhone 16 / Glossy
+    58321542742400: {'variant_id': 20298, 'on_dark': False},  # iPhone 16 / Matte
+    58321542775168: {'variant_id': 20296, 'on_dark': False},  # iPhone 16 Pro / Glossy
+    58321542807936: {'variant_id': 20300, 'on_dark': False},  # iPhone 16 Pro / Matte
+    58321542840704: {'variant_id': 20295, 'on_dark': False},  # iPhone 16 Plus / Glossy
+    58321542873472: {'variant_id': 20299, 'on_dark': False},  # iPhone 16 Plus / Matte
+    58321542906240: {'variant_id': 20297, 'on_dark': False},  # iPhone 16 Pro Max / Glossy
+    58321542939008: {'variant_id': 20301, 'on_dark': False},  # iPhone 16 Pro Max / Matte
+    58321542971776: {'variant_id': 34009, 'on_dark': False},  # iPhone 17 / Glossy
+    58321543004544: {'variant_id': 34010, 'on_dark': False},  # iPhone 17 / Matte
+    58321543037312: {'variant_id': 34011, 'on_dark': False},  # iPhone 17 Air / Glossy
+    58321543070080: {'variant_id': 34012, 'on_dark': False},  # iPhone 17 Air / Matte
+    58321543102848: {'variant_id': 34013, 'on_dark': False},  # iPhone 17 Pro / Glossy
+    58321543135616: {'variant_id': 34014, 'on_dark': False},  # iPhone 17 Pro / Matte
+    58321543168384: {'variant_id': 34015, 'on_dark': False},  # iPhone 17 Pro Max / Glossy
+    58321543201152: {'variant_id': 34016, 'on_dark': False},  # iPhone 17 Pro Max / Matte
 }
 
 
