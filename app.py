@@ -201,7 +201,7 @@ def generate_line_art(photo_url: str):
         arguments={
             'image_urls': [photo_url],
             'prompt': PROMPT,
-            'resolution': '2K',
+            'resolution': '4K',
         }
     )
     out_url = result['images'][0]['url']
