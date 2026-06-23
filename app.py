@@ -55,18 +55,18 @@ _printfile_cache = {}
 # dark=False → keep black lines on white/light substrate
 VARIANT_MAP = {
     # ── T-Shirt (product 71) ──────────────────────────────────────────────
-    58292438237568: {'variant_id': 9575,  'on_dark': True},   # Black Heather / XS
-    58292438270336: {'variant_id': 8923,  'on_dark': True},   # Black Heather / S
-    58292438303104: {'variant_id': 8924,  'on_dark': True},   # Black Heather / M
-    58292438335872: {'variant_id': 8925,  'on_dark': True},   # Black Heather / L
-    58292438368640: {'variant_id': 8926,  'on_dark': True},   # Black Heather / XL
-    58292438401408: {'variant_id': 8927,  'on_dark': True},   # Black Heather / 2XL
-    58292438434176: {'variant_id': 9526,  'on_dark': False},  # White / XS
-    58292438466944: {'variant_id': 4011,  'on_dark': False},  # White / S
-    58292438499712: {'variant_id': 4012,  'on_dark': False},  # White / M
-    58292438532480: {'variant_id': 4013,  'on_dark': False},  # White / L
-    58292438565248: {'variant_id': 4014,  'on_dark': False},  # White / XL
-    58292438598016: {'variant_id': 4015,  'on_dark': False},  # White / 2XL
+    58321490149760: {'variant_id': 9575,  'on_dark': True},   # Black Heather / XS
+    58321490313600: {'variant_id': 8923,  'on_dark': True},   # Black Heather / S
+    58321490346368: {'variant_id': 8924,  'on_dark': True},   # Black Heather / M
+    58321490379136: {'variant_id': 8925,  'on_dark': True},   # Black Heather / L
+    58321490411904: {'variant_id': 8926,  'on_dark': True},   # Black Heather / XL
+    58321490444672: {'variant_id': 8927,  'on_dark': True},   # Black Heather / 2XL
+    58321490477440: {'variant_id': 9526,  'on_dark': False},  # White / XS
+    58321490510208: {'variant_id': 4011,  'on_dark': False},  # White / S
+    58321490542976: {'variant_id': 4012,  'on_dark': False},  # White / M
+    58321490575744: {'variant_id': 4013,  'on_dark': False},  # White / L
+    58321490608512: {'variant_id': 4014,  'on_dark': False},  # White / XL
+    58321490641280: {'variant_id': 4015,  'on_dark': False},  # White / 2XL
 
     # ── Hoodie (product 380) ──────────────────────────────────────────────
     58292420542848: {'variant_id': 10779, 'on_dark': True},   # Black / S
@@ -93,28 +93,28 @@ VARIANT_MAP = {
     58292428767616: {'variant_id': 5429,  'on_dark': False},  # White / XL
 
     # ── Mug (product 19) ─────────────────────────────────────────────────
-    58292442759552: {'variant_id': 1320,  'on_dark': False},  # 11 oz
-    58292442792320: {'variant_id': 4830,  'on_dark': False},  # 15 oz
+    58321490706816: {'variant_id': 1320,  'on_dark': False},  # 11 oz
+    58321490772352: {'variant_id': 4830,  'on_dark': False},  # 15 oz
 
     # ── Tote Bag (product 367) ───────────────────────────────────────────
     58292449313152: {'variant_id': 10457, 'on_dark': True},   # Black
 
     # ── Canvas Print (product 3) ──────────────────────────────────────────
-    58303853429120: {'variant_id': 823,   'on_dark': False},  # 12x12 in
-    58303853461888: {'variant_id': 5,     'on_dark': False},  # 12x16 in
-    58303853494656: {'variant_id': 6,     'on_dark': False},  # 16x20 in
-    58303853527424: {'variant_id': 7,     'on_dark': False},  # 18x24 in
-    58303853560192: {'variant_id': 825,   'on_dark': False},  # 24x36 in
+    58321490805120: {'variant_id': 823,   'on_dark': False},  # 12x12 in
+    58321491362176: {'variant_id': 5,     'on_dark': False},  # 12x16 in
+    58321491394944: {'variant_id': 6,     'on_dark': False},  # 16x20 in
+    58321491427712: {'variant_id': 7,     'on_dark': False},  # 18x24 in
+    58321491460480: {'variant_id': 825,   'on_dark': False},  # 24x36 in
 
     # ── Throw Pillow (product 214) ────────────────────────────────────────
-    58303853625728: {'variant_id': 7907,  'on_dark': False},  # 20x12 in
-    58303853658496: {'variant_id': 9515,  'on_dark': False},  # 18x18 in
-    58303853691264: {'variant_id': 11077, 'on_dark': False},  # 22x22 in
+    58321491526016: {'variant_id': 7907,  'on_dark': False},  # 20x12 in
+    58321492738432: {'variant_id': 9515,  'on_dark': False},  # 18x18 in
+    58321492771200: {'variant_id': 11077, 'on_dark': False},  # 22x22 in
 
     # ── Sherpa Blanket (product 711) ──────────────────────────────────────
-    58303853855104: {'variant_id': 17483, 'on_dark': False},  # 37x57 in
-    58303853887872: {'variant_id': 17482, 'on_dark': False},  # 50x60 in
-    58303853920640: {'variant_id': 17449, 'on_dark': False},  # 60x80 in
+    58321492869504: {'variant_id': 17483, 'on_dark': False},  # 37x57 in
+    58321492902272: {'variant_id': 17482, 'on_dark': False},  # 50x60 in
+    58321492935040: {'variant_id': 17449, 'on_dark': False},  # 60x80 in
 
     # ── Pet Bandana Collar (product 902) ──────────────────────────────────
     58303853953408: {'variant_id': 23142, 'on_dark': False},  # S
