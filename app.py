@@ -4,7 +4,7 @@ from flask_limiter.util import get_remote_address
 import urllib.request, base64, os, tempfile, io, hmac, hashlib, json
 import fal_client
 import requests as http_requests
-from PIL import Image
+from PIL import Image, ImageFilter
 import numpy as np
 
 app = Flask(__name__)
@@ -225,12 +225,15 @@ def process_line_art(img_bytes: bytes, on_dark: bool) -> bytes:
         r = data[:, :, 0].astype(np.float32)
         g = data[:, :, 1].astype(np.float32)
         b = data[:, :, 2].astype(np.float32)
-        # Use per-channel minimum as brightness proxy — only truly white pixels
-        # (from originally black lines) score near 255; everything else falls off.
-        # gamma=2 pushes mid-grays toward transparent, sharpening the result.
+        # Hard binary threshold: originally-dark pixels (min_chan > 60 after inversion)
+        # become fully opaque; everything else is fully transparent.
+        # No gamma fade — every line pixel is alpha=255, giving maximum white visibility.
         min_chan = np.minimum(np.minimum(r, g), b)
-        alpha = np.clip((min_chan / 255.0) ** 2.0 * 255.0, 0, 255).astype(np.uint8)
-        # Force RGB to pure white so no brownish/warm tint survives in Printful mockup
+        alpha = np.where(min_chan > 60, 255, 0).astype(np.uint8)
+        # Thicken lines via morphological dilation (MaxFilter size=5 = ~2px expansion
+        # in each direction) so lines read as bold and white in the Printful mockup.
+        alpha = np.array(Image.fromarray(alpha).filter(ImageFilter.MaxFilter(size=5)))
+        # Force RGB to pure white — no colour tint can survive
         data[:, :, :3] = 255
         data[:, :, 3] = alpha
     else:
