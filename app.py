@@ -212,17 +212,27 @@ def generate_line_art(photo_url: str):
 
 def process_line_art(img_bytes: bytes, on_dark: bool) -> bytes:
     """Convert line art to transparent PNG for dark or light products.
-    - on_dark=True:  invert (black->white lines) + make near-black transparent
+    - on_dark=True:  invert (black->white lines), use brightness as alpha,
+                     force RGB to pure white — crisp white lines, no colour tint
     - on_dark=False: keep black lines + make near-white transparent
     """
     img = Image.open(io.BytesIO(img_bytes)).convert('RGBA')
     data = np.array(img, dtype=np.uint8)
 
     if on_dark:
+        # Invert: black lines become white, white background becomes black
         data[:, :, :3] = 255 - data[:, :, :3]
-        r, g, b = data[:, :, 0], data[:, :, 1], data[:, :, 2]
-        mask = (r < 60) & (g < 60) & (b < 60)
-        data[mask, 3] = 0
+        r = data[:, :, 0].astype(np.float32)
+        g = data[:, :, 1].astype(np.float32)
+        b = data[:, :, 2].astype(np.float32)
+        # Use per-channel minimum as brightness proxy — only truly white pixels
+        # (from originally black lines) score near 255; everything else falls off.
+        # gamma=2 pushes mid-grays toward transparent, sharpening the result.
+        min_chan = np.minimum(np.minimum(r, g), b)
+        alpha = np.clip((min_chan / 255.0) ** 2.0 * 255.0, 0, 255).astype(np.uint8)
+        # Force RGB to pure white so no brownish/warm tint survives in Printful mockup
+        data[:, :, :3] = 255
+        data[:, :, 3] = alpha
     else:
         r, g, b = data[:, :, 0], data[:, :, 1], data[:, :, 2]
         mask = (r > 200) & (g > 200) & (b > 200)
