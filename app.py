@@ -31,20 +31,20 @@ SHOPIFY_WEBHOOK_SECRET = os.environ.get('SHOPIFY_WEBHOOK_SECRET', '')
 # GET /mockup-generator/printfiles/{product_id} lists valid placements per product.
 # Apparel uses 'front'; flat/wrap products use 'default'.
 PRODUCT_PLACEMENT = {
-    1:   'front',    # Art Print (poster)
+    1:   'default',  # Art Print (poster)
     3:   'default',  # Canvas Print (stretched canvas)
     19:  'default',  # White Mug (11 oz / 15 oz)
     71:  'front',    # Bella+Canvas 3001 T-Shirt
     145: 'front',    # Gildan 18000 Sweatshirt
-    214: 'front',    # Throw Pillow
+    214: 'default',  # Throw Pillow
     234: 'front',    # Baby Bodysuit
-    367: 'front',    # Tote Bag
+    367: 'default',  # Tote Bag
     380: 'front',    # Gildan 18500 Hoodie
-    594: 'front',    # Gym Bag
+    594: 'default',  # Gym Bag
     678: 'default',  # Pet Bowl
     683: 'default',  # Phone Case (snap case — wrap placement)
-    711: 'front',    # Sherpa Blanket
-    902: 'front',    # Pet Bandana Collar
+    711: 'default',  # Sherpa Blanket
+    902: 'default',  # Pet Bandana Collar
 }
 
 # Cache: (product_id, placement) → position dict fetched from Printful printfiles API
