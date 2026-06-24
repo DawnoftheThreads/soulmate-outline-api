@@ -579,8 +579,8 @@ def pf_placements(pid):
             timeout=15
         )
         tdata = tresp.json().get('result', {})
-        # result.templates is a dict: str(template_id) -> {image_url, template_width, ...}
-        templates_dict = tdata.get('templates', {})
+        # result.templates is a list → build lookup dict by str(template_id)
+        templates_dict = {str(t.get('template_id')): t for t in tdata.get('templates', [])}
         templates = []
         seen_tids = set()
         for vm in tdata.get('variant_mapping', []):
