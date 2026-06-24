@@ -600,8 +600,15 @@ def pf_placements(pid):
                         'pal': t.get('print_area_left'),
                         'pat': t.get('print_area_top'),
                     })
+        variant_ids = []
+        for vm in tdata.get('variant_mapping', []):
+            vid = vm.get('variant_id')
+            for ref in vm.get('templates', []):
+                if vid not in variant_ids:
+                    variant_ids.append(vid)
         return jsonify({'product_id': pid, 'available_placements': placements,
-                        'printfiles': printfiles, 'templates': templates})
+                        'printfiles': printfiles, 'templates': templates,
+                        'variant_ids': variant_ids})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
