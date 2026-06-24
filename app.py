@@ -42,7 +42,7 @@ PRODUCT_PLACEMENT = {
     380: 'front',    # Gildan 18500 Hoodie
     594: 'front',    # Gym Bag
     678: 'default',  # Pet Bowl
-    683: 'front',    # Phone Case
+    683: 'default',  # Phone Case (snap case — wrap placement)
     711: 'front',    # Sherpa Blanket
     902: 'front',    # Pet Bandana Collar
 }
