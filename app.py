@@ -572,7 +572,21 @@ def pf_placements(pid):
         printfiles = [{'id': p.get('printfile_id'), 'placement': p.get('placement'),
                        'w': p.get('width'), 'h': p.get('height')}
                       for p in result.get('printfiles', [])]
-        return jsonify({'product_id': pid, 'available_placements': placements, 'printfiles': printfiles})
+        # Also fetch template info (image_url + dimensions)
+        tresp = http_requests.get(
+            f'https://api.printful.com/mockup-generator/templates/{pid}',
+            headers={'Authorization': f'Bearer {PRINTFUL_KEY}'},
+            timeout=15
+        )
+        tdata = tresp.json().get('result', {})
+        templates = [{'id': t.get('template_id'), 'image_url': t.get('image_url'),
+                      'tw': t.get('template_width'), 'th': t.get('template_height'),
+                      'paw': t.get('print_area_width'), 'pah': t.get('print_area_height'),
+                      'pal': t.get('print_area_left'), 'pat': t.get('print_area_top'),
+                      'variants': t.get('variant_ids', [])}
+                     for t in tdata.get('variant_mapping', [])]
+        return jsonify({'product_id': pid, 'available_placements': placements,
+                        'printfiles': printfiles, 'templates': templates})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
