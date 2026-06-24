@@ -555,6 +555,28 @@ def transparent_png():
     )
 
 
+@app.route('/pf-placements/<int:pid>')
+def pf_placements(pid):
+    """DEBUG: Return available placements from Printful printfiles API for product <pid>."""
+    if not PRINTFUL_KEY:
+        return jsonify({'error': 'Missing PRINTFUL_KEY'}), 400
+    try:
+        resp = http_requests.get(
+            f'https://api.printful.com/mockup-generator/printfiles/{pid}',
+            headers={'Authorization': f'Bearer {PRINTFUL_KEY}'},
+            timeout=15
+        )
+        data = resp.json()
+        result = data.get('result', {})
+        placements = result.get('available_placements', {})
+        printfiles = [{'id': p.get('printfile_id'), 'placement': p.get('placement'),
+                       'w': p.get('width'), 'h': p.get('height')}
+                      for p in result.get('printfiles', [])]
+        return jsonify({'product_id': pid, 'available_placements': placements, 'printfiles': printfiles})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 @app.route('/pf-blank-mockup/<int:pid>')
 def pf_blank_mockup(pid):
     """DEBUG: Generate a blank (no-design) mockup for product <pid> using a transparent PNG.
