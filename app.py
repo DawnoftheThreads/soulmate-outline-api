@@ -36,15 +36,15 @@ PRODUCT_PLACEMENT = {
     19:  'default',  # White Mug (11 oz / 15 oz)
     71:  'front',    # Bella+Canvas 3001 T-Shirt
     145: 'front',    # Gildan 18000 Sweatshirt
-    214: 'default',  # Throw Pillow
+    214: 'front',    # Throw Pillow
     234: 'front',    # Baby Bodysuit
-    367: 'default',  # Tote Bag
+    367: 'front',    # Tote Bag
     380: 'front',    # Gildan 18500 Hoodie
     594: 'front',    # Gym Bag (requires position field)
     678: 'default',  # Pet Bowl
     683: 'default',  # Phone Case (snap case — wrap placement)
     711: 'default',  # Sherpa Blanket
-    902: 'default',  # Pet Bandana Collar
+    902: 'front',    # Pet Bandana Collar
 }
 
 # Cache: (product_id, placement) → position dict fetched from Printful printfiles API
