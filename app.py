@@ -579,18 +579,19 @@ def pf_placements(pid):
             timeout=15
         )
         tdata = tresp.json().get('result', {})
+        # result.templates is a dict: str(template_id) -> {image_url, template_width, ...}
+        templates_dict = tdata.get('templates', {})
         templates = []
-        raw_sample = None
         seen_tids = set()
         for vm in tdata.get('variant_mapping', []):
-            for t in vm.get('templates', []):
-                if raw_sample is None:
-                    raw_sample = dict(t)  # capture ALL keys for debugging
-                tid = t.get('template_id')
+            for ref in vm.get('templates', []):
+                tid = ref.get('template_id')
                 if tid not in seen_tids:
                     seen_tids.add(tid)
+                    t = templates_dict.get(str(tid), {})
                     templates.append({
                         'id': tid,
+                        'placement': ref.get('placement'),
                         'image_url': t.get('image_url'),
                         'tw': t.get('template_width'),
                         'th': t.get('template_height'),
@@ -600,8 +601,7 @@ def pf_placements(pid):
                         'pat': t.get('print_area_top'),
                     })
         return jsonify({'product_id': pid, 'available_placements': placements,
-                        'printfiles': printfiles, 'templates': templates,
-                        'raw_sample': raw_sample})
+                        'printfiles': printfiles, 'templates': templates})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
