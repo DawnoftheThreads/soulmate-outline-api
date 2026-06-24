@@ -27,7 +27,7 @@ PRINTFUL_KEY       = os.environ.get('PRINTFUL_KEY')        # mockup token (read 
 PRINTFUL_ORDER_KEY = os.environ.get('PRINTFUL_ORDER_KEY')  # orders write token
 SHOPIFY_WEBHOOK_SECRET = os.environ.get('SHOPIFY_WEBHOOK_SECRET', '')
 
-# ââ Per-product placement for Printful Mockup Generator API âââââââââââââââ
+# Ã¢ÂÂÃ¢ÂÂ Per-product placement for Printful Mockup Generator API Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 # GET /mockup-generator/printfiles/{product_id} lists valid placements per product.
 # Apparel uses 'front'; flat/wrap products use 'default'.
 PRODUCT_PLACEMENT = {
@@ -42,20 +42,20 @@ PRODUCT_PLACEMENT = {
     380: 'front',    # Gildan 18500 Hoodie
     594: 'front',    # Gym Bag (requires position field)
     678: 'default',  # Pet Bowl
-    683: 'default',  # Phone Case (snap case â wrap placement)
+    683: 'default',  # Phone Case (snap case Ã¢ÂÂ wrap placement)
     711: 'default',  # Sherpa Blanket
     902: 'front',    # Pet Bandana Collar
     601: 'default',  # Tough iPhone Case
 }
 
-# Cache: (product_id, placement) â position dict fetched from Printful printfiles API
+# Cache: (product_id, placement) Ã¢ÂÂ position dict fetched from Printful printfiles API
 _printfile_cache = {}
 
-# ââ Shopify variant ID â Printful variant + dark-product flag ââââââââââââââ
-# dark=True  â invert image (white lines on black/dark substrate)
-# dark=False â keep black lines on white/light substrate
+# Ã¢ÂÂÃ¢ÂÂ Shopify variant ID Ã¢ÂÂ Printful variant + dark-product flag Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+# dark=True  Ã¢ÂÂ invert image (white lines on black/dark substrate)
+# dark=False Ã¢ÂÂ keep black lines on white/light substrate
 VARIANT_MAP = {
-    # ââ T-Shirt (product 71) ââââââââââââââââââââââââââââââââââââââââââââââ
+    # Ã¢ÂÂÃ¢ÂÂ T-Shirt (product 71) Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
     58321490149760: {'variant_id': 9575,  'on_dark': True},   # Black Heather / XS
     58321490313600: {'variant_id': 8923,  'on_dark': True},   # Black Heather / S
     58321490346368: {'variant_id': 8924,  'on_dark': True},   # Black Heather / M
@@ -69,7 +69,7 @@ VARIANT_MAP = {
     58321490608512: {'variant_id': 4014,  'on_dark': False},  # White / XL
     58321490641280: {'variant_id': 4015,  'on_dark': False},  # White / 2XL
 
-    # ââ Hoodie (product 380) ââââââââââââââââââââââââââââââââââââââââââââââ
+    # Ã¢ÂÂÃ¢ÂÂ Hoodie (product 380) Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
     58292420542848: {'variant_id': 10779, 'on_dark': True},   # Black / S
     58292420575616: {'variant_id': 10780, 'on_dark': True},   # Black / M
     58292420608384: {'variant_id': 10781, 'on_dark': True},   # Black / L
@@ -83,7 +83,7 @@ VARIANT_MAP = {
     58292420870528: {'variant_id': 10778, 'on_dark': False},  # White / 2XL
     58292420903296: {'variant_id': 13421, 'on_dark': False},  # White / 3XL
 
-    # ââ Sweatshirt (product 145) ââââââââââââââââââââââââââââââââââââââââââ
+    # Ã¢ÂÂÃ¢ÂÂ Sweatshirt (product 145) Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
     58292428538240: {'variant_id': 5434,  'on_dark': True},   # Black / S
     58292428571008: {'variant_id': 5435,  'on_dark': True},   # Black / M
     58292428603776: {'variant_id': 5436,  'on_dark': True},   # Black / L
@@ -93,41 +93,41 @@ VARIANT_MAP = {
     58292428734848: {'variant_id': 5428,  'on_dark': False},  # White / L
     58292428767616: {'variant_id': 5429,  'on_dark': False},  # White / XL
 
-    # ââ Mug (product 19) âââââââââââââââââââââââââââââââââââââââââââââââââ
+    # Ã¢ÂÂÃ¢ÂÂ Mug (product 19) Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
     58321490706816: {'variant_id': 1320,  'on_dark': False},  # 11 oz
     58321490772352: {'variant_id': 4830,  'on_dark': False},  # 15 oz
 
-    # ââ Tote Bag (product 367) âââââââââââââââââââââââââââââââââââââââââââ
+    # Ã¢ÂÂÃ¢ÂÂ Tote Bag (product 367) Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
     58321530552704: {'variant_id': 10457, 'on_dark': True},   # Black
 
-    # ââ Canvas Print (product 3) ââââââââââââââââââââââââââââââââââââââââââ
+    # Ã¢ÂÂÃ¢ÂÂ Canvas Print (product 3) Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
     58321490805120: {'variant_id': 823,   'on_dark': False},  # 12x12 in
     58321491362176: {'variant_id': 5,     'on_dark': False},  # 12x16 in
     58321491394944: {'variant_id': 6,     'on_dark': False},  # 16x20 in
     58321491427712: {'variant_id': 7,     'on_dark': False},  # 18x24 in
     58321491460480: {'variant_id': 825,   'on_dark': False},  # 24x36 in
 
-    # ââ Throw Pillow (product 214) ââââââââââââââââââââââââââââââââââââââââ
+    # Ã¢ÂÂÃ¢ÂÂ Throw Pillow (product 214) Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
     58321491526016: {'variant_id': 7907,  'on_dark': False},  # 20x12 in
     58321492738432: {'variant_id': 9515,  'on_dark': False},  # 18x18 in
     58321492771200: {'variant_id': 11077, 'on_dark': False},  # 22x22 in
 
-    # ââ Sherpa Blanket (product 711) ââââââââââââââââââââââââââââââââââââââ
+    # Ã¢ÂÂÃ¢ÂÂ Sherpa Blanket (product 711) Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
     58321492869504: {'variant_id': 17483, 'on_dark': False},  # 37x57 in
     58321492902272: {'variant_id': 17482, 'on_dark': False},  # 50x60 in
     58321492935040: {'variant_id': 17449, 'on_dark': False},  # 60x80 in
 
-    # ââ Pet Bandana Collar (product 902) ââââââââââââââââââââââââââââââââââ
+    # Ã¢ÂÂÃ¢ÂÂ Pet Bandana Collar (product 902) Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
     58321531175296: {'variant_id': 23142, 'on_dark': False},  # S
     58321540809088: {'variant_id': 23141, 'on_dark': False},  # M
     58321540841856: {'variant_id': 23140, 'on_dark': False},  # L
     58321540874624: {'variant_id': 23143, 'on_dark': False},  # XL
 
-    # ââ Pet Bowl (product 678) ââââââââââââââââââââââââââââââââââââââââââââ
+    # Ã¢ÂÂÃ¢ÂÂ Pet Bowl (product 678) Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
     58321531535744: {'variant_id': 16785, 'on_dark': False},  # 18 oz
     58321541104000: {'variant_id': 16786, 'on_dark': False},  # 32 oz
 
-    # ââ Baby Bodysuit (product 234) âââââââââââââââââââââââââââââââââââââââ
+    # Ã¢ÂÂÃ¢ÂÂ Baby Bodysuit (product 234) Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
     58321531863424: {'variant_id': 8177,  'on_dark': True},   # Black / 12M
     58321541267840: {'variant_id': 8178,  'on_dark': True},   # Black / 18M
     58321541300608: {'variant_id': 8179,  'on_dark': True},   # Black / 24M
@@ -141,17 +141,17 @@ VARIANT_MAP = {
     58321541562752: {'variant_id': 8173,  'on_dark': False},  # White / 18M
     58321541595520: {'variant_id': 8174,  'on_dark': False},  # White / 24M
 
-    # ââ Gym Bag (product 594) âââââââââââââââââââââââââââââââââââââââââââââ
+    # Ã¢ÂÂÃ¢ÂÂ Gym Bag (product 594) Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
     58321531928960: {'variant_id': 15155, 'on_dark': False},  # One Size
 
-    # ââ Art Print (product 1) âââââââââââââââââââââââââââââââââââââââââââââ
+    # Ã¢ÂÂÃ¢ÂÂ Art Print (product 1) Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
     58321538449792: {'variant_id': 4463,  'on_dark': False},  # 8x10 in
     58321541726592: {'variant_id': 1349,  'on_dark': False},  # 12x16 in
     58321541759360: {'variant_id': 3877,  'on_dark': False},  # 16x20 in
     58321541792128: {'variant_id': 1,     'on_dark': False},  # 18x24 in
     58321541824896: {'variant_id': 2,     'on_dark': False},  # 24x36 in
 
-    # ââ Phone Case (product 683) ââââââââââââââââââââââââââââââââââââââââââ
+    # Ã¢ÂÂÃ¢ÂÂ Phone Case (product 683) Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
     58321538548096: {'variant_id': 16910, 'on_dark': False},  # iPhone 14 / Glossy
     58321542218112: {'variant_id': 16911, 'on_dark': False},  # iPhone 14 / Matte
     58321542250880: {'variant_id': 16912, 'on_dark': False},  # iPhone 14 Pro / Glossy
@@ -184,7 +184,7 @@ VARIANT_MAP = {
     58321543135616: {'variant_id': 34014, 'on_dark': False},  # iPhone 17 Pro / Matte
     58321543168384: {'variant_id': 34015, 'on_dark': False},  # iPhone 17 Pro Max / Glossy
     58321543201152: {'variant_id': 34016, 'on_dark': False},  # iPhone 17 Pro Max / Matte
-    # — Tough iPhone Case (product 601) ————————————————————————————————————————
+    # â Tough iPhone Case (product 601) ââââââââââââââââââââââââââââââââââââââââ
     58323893289344: {'variant_id': 16124, 'on_dark': False},  # iPhone 14 / Glossy
     58323893322112: {'variant_id': 16125, 'on_dark': False},  # iPhone 14 / Matte
     58323893354880: {'variant_id': 16126, 'on_dark': False},  # iPhone 14 Pro / Glossy
@@ -247,7 +247,7 @@ def generate_line_art(photo_url: str):
 def process_line_art(img_bytes: bytes, on_dark: bool) -> bytes:
     """Convert line art to transparent PNG for dark or light products.
     - on_dark=True:  invert (black->white lines), use brightness as alpha,
-                     force RGB to pure white â crisp white lines, no colour tint
+                     force RGB to pure white Ã¢ÂÂ crisp white lines, no colour tint
     - on_dark=False: keep black lines + make near-white transparent
     """
     img = Image.open(io.BytesIO(img_bytes)).convert('RGBA')
@@ -259,7 +259,7 @@ def process_line_art(img_bytes: bytes, on_dark: bool) -> bytes:
         r = data[:, :, 0].astype(np.float32)
         g = data[:, :, 1].astype(np.float32)
         b = data[:, :, 2].astype(np.float32)
-        # Use per-channel minimum as brightness proxy â only truly white pixels
+        # Use per-channel minimum as brightness proxy Ã¢ÂÂ only truly white pixels
         # (from originally black lines) score near 255; everything else falls off.
         # gamma=2 pushes mid-grays toward transparent, sharpening the result.
         min_chan = np.minimum(np.minimum(r, g), b)
@@ -330,7 +330,7 @@ def get_position_for_product(product_id: int, placement: str) -> dict:
             'limit_to_print_area': True,
         }
     else:
-        # Fallback: generic apparel dimensions (1800Ã2400 @ 150 DPI = 12"Ã16")
+        # Fallback: generic apparel dimensions (1800ÃÂ2400 @ 150 DPI = 12"ÃÂ16")
         position = {
             'area_width':          1800,
             'area_height':         2400,
@@ -354,7 +354,7 @@ def get_position_for_product(product_id: int, placement: str) -> dict:
 def health():
     return jsonify({
         'status': 'ok',
-        'service': 'Soulmate Custom Gifts â Photo Outline API v17',
+        'service': 'Soulmate Custom Gifts Ã¢ÂÂ Photo Outline API v17',
         'pipeline': 'fal.ai nano-banana-pro/edit -> fine line drawing + Printful mockups + order fulfillment'
     })
 
@@ -441,7 +441,7 @@ def mockup_start():
     try:
         design_url = prepare_design_url(line_art_url, on_dark)
 
-        # Use product-specific placement â apparel needs 'front', flat/wrap products use 'default'
+        # Use product-specific placement Ã¢ÂÂ apparel needs 'front', flat/wrap products use 'default'
         placement = PRODUCT_PLACEMENT.get(product_id, 'front')
 
         # Use customer-chosen position if provided, otherwise fetch from Printful printfiles API
@@ -580,133 +580,13 @@ _TRANSPARENT_PNG_B64 = (
 
 @app.route('/transparent-png')
 def transparent_png():
-    """Serve 1050Ã1900 transparent PNG â used as blank design for Printful mockup generation."""
+    """Serve 1050ÃÂ1900 transparent PNG Ã¢ÂÂ used as blank design for Printful mockup generation."""
     from flask import send_file
     return send_file(
         io.BytesIO(base64.b64decode(_TRANSPARENT_PNG_B64)),
         mimetype='image/png',
         download_name='transparent.png'
     )
-
-
-@app.route('/pf-placements/<int:pid>')
-def pf_placements(pid):
-    """DEBUG: Return available placements from Printful printfiles API for product <pid>."""
-    if not PRINTFUL_KEY:
-        return jsonify({'error': 'Missing PRINTFUL_KEY'}), 400
-    try:
-        resp = http_requests.get(
-            f'https://api.printful.com/mockup-generator/printfiles/{pid}',
-            headers={'Authorization': f'Bearer {PRINTFUL_KEY}'},
-            timeout=15
-        )
-        data = resp.json()
-        result = data.get('result', {})
-        placements = result.get('available_placements', {})
-        printfiles = [{'id': p.get('printfile_id'), 'placement': p.get('placement'),
-                       'w': p.get('width'), 'h': p.get('height')}
-                      for p in result.get('printfiles', [])]
-        # Also fetch template info (image_url + dimensions)
-        tresp = http_requests.get(
-            f'https://api.printful.com/mockup-generator/templates/{pid}',
-            headers={'Authorization': f'Bearer {PRINTFUL_KEY}'},
-            timeout=15
-        )
-        tdata = tresp.json().get('result', {})
-        # result.templates is a list â build lookup dict by str(template_id)
-        templates_dict = {str(t.get('template_id')): t for t in tdata.get('templates', [])}
-        templates = []
-        seen_tids = set()
-        for vm in tdata.get('variant_mapping', []):
-            for ref in vm.get('templates', []):
-                tid = ref.get('template_id')
-                if tid not in seen_tids:
-                    seen_tids.add(tid)
-                    t = templates_dict.get(str(tid), {})
-                    templates.append({
-                        'id': tid,
-                        'placement': ref.get('placement'),
-                        'image_url': t.get('image_url'),
-                        'tw': t.get('template_width'),
-                        'th': t.get('template_height'),
-                        'paw': t.get('print_area_width'),
-                        'pah': t.get('print_area_height'),
-                        'pal': t.get('print_area_left'),
-                        'pat': t.get('print_area_top'),
-                    })
-        variant_ids = []
-        for vm in tdata.get('variant_mapping', []):
-            vid = vm.get('variant_id')
-            for ref in vm.get('templates', []):
-                if vid not in variant_ids:
-                    variant_ids.append(vid)
-        return jsonify({'product_id': pid, 'available_placements': placements,
-                        'printfiles': printfiles, 'templates': templates,
-                        'variant_ids': variant_ids})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-
-@app.route('/pf-blank-mockup/<int:pid>')
-def pf_blank_mockup(pid):
-    """DEBUG: Generate a blank (no-design) mockup for product <pid> using a transparent PNG.
-    Query params: variant_id (required), placement (optional, default 'front')
-    Returns: { mockup_url: ... } from Printful mockup generator.
-    """
-    import time
-    variant_id = request.args.get('variant_id', type=int)
-    placement  = request.args.get('placement', PRODUCT_PLACEMENT.get(pid, 'front'))
-
-    if not variant_id:
-        return jsonify({'error': 'Missing variant_id query param'}), 400
-    if not PRINTFUL_KEY:
-        return jsonify({'error': 'Missing PRINTFUL_KEY'}), 400
-
-    # Use our own Railway endpoint as the transparent design URL
-    base_url = request.host_url.rstrip('/')
-    design_url = f'{base_url}/transparent-png'
-
-    # Create the mockup task
-    task_payload = {
-        'variant_ids': [variant_id],
-        'files': [{'placement': placement, 'image_url': design_url}],
-        'format': 'jpg'
-    }
-    try:
-        resp = http_requests.post(
-            f'https://api.printful.com/mockup-generator/create-task/{pid}',
-            headers={'Authorization': f'Bearer {PRINTFUL_KEY}'},
-            json=task_payload,
-            timeout=30
-        )
-        resp_data = resp.json()
-        if resp_data.get('code') != 200:
-            return jsonify({'error': 'Printful task error', 'data': resp_data}), 500
-        task_key = resp_data['result']['task_key']
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-    # Poll for result (max ~60s)
-    for _ in range(20):
-        time.sleep(3)
-        try:
-            poll = http_requests.get(
-                f'https://api.printful.com/mockup-generator/task?task_key={task_key}',
-                headers={'Authorization': f'Bearer {PRINTFUL_KEY}'},
-                timeout=15
-            )
-            result = poll.json().get('result', {})
-            status = result.get('status', 'unknown')
-            if status == 'completed':
-                mockups = result.get('mockups', [])
-                urls = [m['mockup_url'] for m in mockups]
-                return jsonify({'status': 'completed', 'task_key': task_key, 'mockup_urls': urls})
-            elif status == 'failed':
-                return jsonify({'status': 'failed', 'data': result}), 500
-        except Exception as e:
-            return jsonify({'error': str(e)}), 500
-
-    return jsonify({'status': 'timeout', 'task_key': task_key}), 408
 
 
 @app.route('/webhook/order', methods=['POST'])
