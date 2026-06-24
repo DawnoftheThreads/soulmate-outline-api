@@ -670,6 +670,30 @@ def shopify_order_webhook():
         printful_variant_id = mapping['variant_id']
         on_dark             = mapping['on_dark']
 
+        # Resolve Printful product ID and placement type
+        try:
+            product_id = int(props.get('_Printful Product', '0') or '0')
+        except ValueError:
+            product_id = 0
+        placement = PRODUCT_PLACEMENT.get(product_id, 'front') if product_id else 'front'
+
+        # Use customer-set canvas position; fall back to Printful print-area defaults
+        position_json = props.get('_Design Position', '').strip()
+        position = None
+        if position_json:
+            try:
+                position = json.loads(position_json)
+            except (json.JSONDecodeError, ValueError):
+                position = None
+        if not position:
+            position = get_position_for_product(product_id, placement) if product_id else {
+                'area_width': 1800, 'area_height': 2400,
+                'width': 1800, 'height': 2400,
+                'top': 0, 'left': 0, 'limit_to_print_area': True,
+            }
+        print(f'[webhook/order] variant {shopify_variant_id}: product={product_id} '
+              f'placement={placement} position={position}')
+
         try:
             design_url = prepare_design_url(line_art_url, on_dark)
         except Exception as e:
@@ -681,7 +705,7 @@ def shopify_order_webhook():
             'quantity':     item.get('quantity', 1),
             'retail_price': str(item.get('price', '')),
             'name':         item.get('title', ''),
-            'files': [{'type': 'default', 'url': design_url}],
+            'files': [{'type': placement, 'url': design_url, 'position': position}],
         })
 
     print(f'[webhook/order] {len(printful_items)} items to print, '
