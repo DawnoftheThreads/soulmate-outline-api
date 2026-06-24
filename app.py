@@ -27,7 +27,7 @@ PRINTFUL_KEY       = os.environ.get('PRINTFUL_KEY')        # mockup token (read 
 PRINTFUL_ORDER_KEY = os.environ.get('PRINTFUL_ORDER_KEY')  # orders write token
 SHOPIFY_WEBHOOK_SECRET = os.environ.get('SHOPIFY_WEBHOOK_SECRET', '')
 
-# ── Per-product placement for Printful Mockup Generator API ───────────────
+# ââ Per-product placement for Printful Mockup Generator API âââââââââââââââ
 # GET /mockup-generator/printfiles/{product_id} lists valid placements per product.
 # Apparel uses 'front'; flat/wrap products use 'default'.
 PRODUCT_PLACEMENT = {
@@ -42,19 +42,20 @@ PRODUCT_PLACEMENT = {
     380: 'front',    # Gildan 18500 Hoodie
     594: 'front',    # Gym Bag (requires position field)
     678: 'default',  # Pet Bowl
-    683: 'default',  # Phone Case (snap case — wrap placement)
+    683: 'default',  # Phone Case (snap case â wrap placement)
     711: 'default',  # Sherpa Blanket
     902: 'front',    # Pet Bandana Collar
+    601: 'default',  # Tough iPhone Case
 }
 
-# Cache: (product_id, placement) → position dict fetched from Printful printfiles API
+# Cache: (product_id, placement) â position dict fetched from Printful printfiles API
 _printfile_cache = {}
 
-# ── Shopify variant ID → Printful variant + dark-product flag ──────────────
-# dark=True  → invert image (white lines on black/dark substrate)
-# dark=False → keep black lines on white/light substrate
+# ââ Shopify variant ID â Printful variant + dark-product flag ââââââââââââââ
+# dark=True  â invert image (white lines on black/dark substrate)
+# dark=False â keep black lines on white/light substrate
 VARIANT_MAP = {
-    # ── T-Shirt (product 71) ──────────────────────────────────────────────
+    # ââ T-Shirt (product 71) ââââââââââââââââââââââââââââââââââââââââââââââ
     58321490149760: {'variant_id': 9575,  'on_dark': True},   # Black Heather / XS
     58321490313600: {'variant_id': 8923,  'on_dark': True},   # Black Heather / S
     58321490346368: {'variant_id': 8924,  'on_dark': True},   # Black Heather / M
@@ -68,7 +69,7 @@ VARIANT_MAP = {
     58321490608512: {'variant_id': 4014,  'on_dark': False},  # White / XL
     58321490641280: {'variant_id': 4015,  'on_dark': False},  # White / 2XL
 
-    # ── Hoodie (product 380) ──────────────────────────────────────────────
+    # ââ Hoodie (product 380) ââââââââââââââââââââââââââââââââââââââââââââââ
     58292420542848: {'variant_id': 10779, 'on_dark': True},   # Black / S
     58292420575616: {'variant_id': 10780, 'on_dark': True},   # Black / M
     58292420608384: {'variant_id': 10781, 'on_dark': True},   # Black / L
@@ -82,7 +83,7 @@ VARIANT_MAP = {
     58292420870528: {'variant_id': 10778, 'on_dark': False},  # White / 2XL
     58292420903296: {'variant_id': 13421, 'on_dark': False},  # White / 3XL
 
-    # ── Sweatshirt (product 145) ──────────────────────────────────────────
+    # ââ Sweatshirt (product 145) ââââââââââââââââââââââââââââââââââââââââââ
     58292428538240: {'variant_id': 5434,  'on_dark': True},   # Black / S
     58292428571008: {'variant_id': 5435,  'on_dark': True},   # Black / M
     58292428603776: {'variant_id': 5436,  'on_dark': True},   # Black / L
@@ -92,41 +93,41 @@ VARIANT_MAP = {
     58292428734848: {'variant_id': 5428,  'on_dark': False},  # White / L
     58292428767616: {'variant_id': 5429,  'on_dark': False},  # White / XL
 
-    # ── Mug (product 19) ─────────────────────────────────────────────────
+    # ââ Mug (product 19) âââââââââââââââââââââââââââââââââââââââââââââââââ
     58321490706816: {'variant_id': 1320,  'on_dark': False},  # 11 oz
     58321490772352: {'variant_id': 4830,  'on_dark': False},  # 15 oz
 
-    # ── Tote Bag (product 367) ───────────────────────────────────────────
+    # ââ Tote Bag (product 367) âââââââââââââââââââââââââââââââââââââââââââ
     58321530552704: {'variant_id': 10457, 'on_dark': True},   # Black
 
-    # ── Canvas Print (product 3) ──────────────────────────────────────────
+    # ââ Canvas Print (product 3) ââââââââââââââââââââââââââââââââââââââââââ
     58321490805120: {'variant_id': 823,   'on_dark': False},  # 12x12 in
     58321491362176: {'variant_id': 5,     'on_dark': False},  # 12x16 in
     58321491394944: {'variant_id': 6,     'on_dark': False},  # 16x20 in
     58321491427712: {'variant_id': 7,     'on_dark': False},  # 18x24 in
     58321491460480: {'variant_id': 825,   'on_dark': False},  # 24x36 in
 
-    # ── Throw Pillow (product 214) ────────────────────────────────────────
+    # ââ Throw Pillow (product 214) ââââââââââââââââââââââââââââââââââââââââ
     58321491526016: {'variant_id': 7907,  'on_dark': False},  # 20x12 in
     58321492738432: {'variant_id': 9515,  'on_dark': False},  # 18x18 in
     58321492771200: {'variant_id': 11077, 'on_dark': False},  # 22x22 in
 
-    # ── Sherpa Blanket (product 711) ──────────────────────────────────────
+    # ââ Sherpa Blanket (product 711) ââââââââââââââââââââââââââââââââââââââ
     58321492869504: {'variant_id': 17483, 'on_dark': False},  # 37x57 in
     58321492902272: {'variant_id': 17482, 'on_dark': False},  # 50x60 in
     58321492935040: {'variant_id': 17449, 'on_dark': False},  # 60x80 in
 
-    # ── Pet Bandana Collar (product 902) ──────────────────────────────────
+    # ââ Pet Bandana Collar (product 902) ââââââââââââââââââââââââââââââââââ
     58321531175296: {'variant_id': 23142, 'on_dark': False},  # S
     58321540809088: {'variant_id': 23141, 'on_dark': False},  # M
     58321540841856: {'variant_id': 23140, 'on_dark': False},  # L
     58321540874624: {'variant_id': 23143, 'on_dark': False},  # XL
 
-    # ── Pet Bowl (product 678) ────────────────────────────────────────────
+    # ââ Pet Bowl (product 678) ââââââââââââââââââââââââââââââââââââââââââââ
     58321531535744: {'variant_id': 16785, 'on_dark': False},  # 18 oz
     58321541104000: {'variant_id': 16786, 'on_dark': False},  # 32 oz
 
-    # ── Baby Bodysuit (product 234) ───────────────────────────────────────
+    # ââ Baby Bodysuit (product 234) âââââââââââââââââââââââââââââââââââââââ
     58321531863424: {'variant_id': 8177,  'on_dark': True},   # Black / 12M
     58321541267840: {'variant_id': 8178,  'on_dark': True},   # Black / 18M
     58321541300608: {'variant_id': 8179,  'on_dark': True},   # Black / 24M
@@ -140,17 +141,17 @@ VARIANT_MAP = {
     58321541562752: {'variant_id': 8173,  'on_dark': False},  # White / 18M
     58321541595520: {'variant_id': 8174,  'on_dark': False},  # White / 24M
 
-    # ── Gym Bag (product 594) ─────────────────────────────────────────────
+    # ââ Gym Bag (product 594) âââââââââââââââââââââââââââââââââââââââââââââ
     58321531928960: {'variant_id': 15155, 'on_dark': False},  # One Size
 
-    # ── Art Print (product 1) ─────────────────────────────────────────────
+    # ââ Art Print (product 1) âââââââââââââââââââââââââââââââââââââââââââââ
     58321538449792: {'variant_id': 4463,  'on_dark': False},  # 8x10 in
     58321541726592: {'variant_id': 1349,  'on_dark': False},  # 12x16 in
     58321541759360: {'variant_id': 3877,  'on_dark': False},  # 16x20 in
     58321541792128: {'variant_id': 1,     'on_dark': False},  # 18x24 in
     58321541824896: {'variant_id': 2,     'on_dark': False},  # 24x36 in
 
-    # ── Phone Case (product 683) ──────────────────────────────────────────
+    # ââ Phone Case (product 683) ââââââââââââââââââââââââââââââââââââââââââ
     58321538548096: {'variant_id': 16910, 'on_dark': False},  # iPhone 14 / Glossy
     58321542218112: {'variant_id': 16911, 'on_dark': False},  # iPhone 14 / Matte
     58321542250880: {'variant_id': 16912, 'on_dark': False},  # iPhone 14 Pro / Glossy
@@ -183,6 +184,39 @@ VARIANT_MAP = {
     58321543135616: {'variant_id': 34014, 'on_dark': False},  # iPhone 17 Pro / Matte
     58321543168384: {'variant_id': 34015, 'on_dark': False},  # iPhone 17 Pro Max / Glossy
     58321543201152: {'variant_id': 34016, 'on_dark': False},  # iPhone 17 Pro Max / Matte
+    # — Tough iPhone Case (product 601) ————————————————————————————————————————
+    58323893289344: {'variant_id': 16124, 'on_dark': False},  # iPhone 14 / Glossy
+    58323893322112: {'variant_id': 16125, 'on_dark': False},  # iPhone 14 / Matte
+    58323893354880: {'variant_id': 16126, 'on_dark': False},  # iPhone 14 Pro / Glossy
+    58323893387648: {'variant_id': 16127, 'on_dark': False},  # iPhone 14 Pro / Matte
+    58323893420416: {'variant_id': 16128, 'on_dark': False},  # iPhone 14 Plus / Glossy
+    58323893453184: {'variant_id': 16129, 'on_dark': False},  # iPhone 14 Plus / Matte
+    58323893485952: {'variant_id': 16130, 'on_dark': False},  # iPhone 14 Pro Max / Glossy
+    58323893518720: {'variant_id': 16131, 'on_dark': False},  # iPhone 14 Pro Max / Matte
+    58323893551488: {'variant_id': 17714, 'on_dark': False},  # iPhone 15 / Glossy
+    58323893584256: {'variant_id': 17715, 'on_dark': False},  # iPhone 15 / Matte
+    58323893617024: {'variant_id': 17718, 'on_dark': False},  # iPhone 15 Pro / Glossy
+    58323893649792: {'variant_id': 17719, 'on_dark': False},  # iPhone 15 Pro / Matte
+    58323893682560: {'variant_id': 17716, 'on_dark': False},  # iPhone 15 Plus / Glossy
+    58323893715328: {'variant_id': 17717, 'on_dark': False},  # iPhone 15 Plus / Matte
+    58323893748096: {'variant_id': 17720, 'on_dark': False},  # iPhone 15 Pro Max / Glossy
+    58323893780864: {'variant_id': 17721, 'on_dark': False},  # iPhone 15 Pro Max / Matte
+    58323893813632: {'variant_id': 20302, 'on_dark': False},  # iPhone 16 / Glossy
+    58323893846400: {'variant_id': 20306, 'on_dark': False},  # iPhone 16 / Matte
+    58323893879168: {'variant_id': 20304, 'on_dark': False},  # iPhone 16 Pro / Glossy
+    58323893911936: {'variant_id': 20308, 'on_dark': False},  # iPhone 16 Pro / Matte
+    58323893944704: {'variant_id': 20303, 'on_dark': False},  # iPhone 16 Plus / Glossy
+    58323893977472: {'variant_id': 20307, 'on_dark': False},  # iPhone 16 Plus / Matte
+    58323894010240: {'variant_id': 20305, 'on_dark': False},  # iPhone 16 Pro Max / Glossy
+    58323894043008: {'variant_id': 20309, 'on_dark': False},  # iPhone 16 Pro Max / Matte
+    58323894075776: {'variant_id': 33985, 'on_dark': False},  # iPhone 17 / Glossy
+    58323894108544: {'variant_id': 33989, 'on_dark': False},  # iPhone 17 / Matte
+    58323894141312: {'variant_id': 33986, 'on_dark': False},  # iPhone 17 Air / Glossy
+    58323894174080: {'variant_id': 33990, 'on_dark': False},  # iPhone 17 Air / Matte
+    58323894206848: {'variant_id': 33987, 'on_dark': False},  # iPhone 17 Pro / Glossy
+    58323894239616: {'variant_id': 33991, 'on_dark': False},  # iPhone 17 Pro / Matte
+    58323894272384: {'variant_id': 33988, 'on_dark': False},  # iPhone 17 Pro Max / Glossy
+    58323894305152: {'variant_id': 33992, 'on_dark': False},  # iPhone 17 Pro Max / Matte
 }
 
 
@@ -213,7 +247,7 @@ def generate_line_art(photo_url: str):
 def process_line_art(img_bytes: bytes, on_dark: bool) -> bytes:
     """Convert line art to transparent PNG for dark or light products.
     - on_dark=True:  invert (black->white lines), use brightness as alpha,
-                     force RGB to pure white — crisp white lines, no colour tint
+                     force RGB to pure white â crisp white lines, no colour tint
     - on_dark=False: keep black lines + make near-white transparent
     """
     img = Image.open(io.BytesIO(img_bytes)).convert('RGBA')
@@ -225,7 +259,7 @@ def process_line_art(img_bytes: bytes, on_dark: bool) -> bytes:
         r = data[:, :, 0].astype(np.float32)
         g = data[:, :, 1].astype(np.float32)
         b = data[:, :, 2].astype(np.float32)
-        # Use per-channel minimum as brightness proxy — only truly white pixels
+        # Use per-channel minimum as brightness proxy â only truly white pixels
         # (from originally black lines) score near 255; everything else falls off.
         # gamma=2 pushes mid-grays toward transparent, sharpening the result.
         min_chan = np.minimum(np.minimum(r, g), b)
@@ -296,7 +330,7 @@ def get_position_for_product(product_id: int, placement: str) -> dict:
             'limit_to_print_area': True,
         }
     else:
-        # Fallback: generic apparel dimensions (1800×2400 @ 150 DPI = 12"×16")
+        # Fallback: generic apparel dimensions (1800Ã2400 @ 150 DPI = 12"Ã16")
         position = {
             'area_width':          1800,
             'area_height':         2400,
@@ -320,7 +354,7 @@ def get_position_for_product(product_id: int, placement: str) -> dict:
 def health():
     return jsonify({
         'status': 'ok',
-        'service': 'Soulmate Custom Gifts — Photo Outline API v17',
+        'service': 'Soulmate Custom Gifts â Photo Outline API v17',
         'pipeline': 'fal.ai nano-banana-pro/edit -> fine line drawing + Printful mockups + order fulfillment'
     })
 
@@ -407,7 +441,7 @@ def mockup_start():
     try:
         design_url = prepare_design_url(line_art_url, on_dark)
 
-        # Use product-specific placement — apparel needs 'front', flat/wrap products use 'default'
+        # Use product-specific placement â apparel needs 'front', flat/wrap products use 'default'
         placement = PRODUCT_PLACEMENT.get(product_id, 'front')
 
         # Use customer-chosen position if provided, otherwise fetch from Printful printfiles API
@@ -546,7 +580,7 @@ _TRANSPARENT_PNG_B64 = (
 
 @app.route('/transparent-png')
 def transparent_png():
-    """Serve 1050×1900 transparent PNG — used as blank design for Printful mockup generation."""
+    """Serve 1050Ã1900 transparent PNG â used as blank design for Printful mockup generation."""
     from flask import send_file
     return send_file(
         io.BytesIO(base64.b64decode(_TRANSPARENT_PNG_B64)),
@@ -579,7 +613,7 @@ def pf_placements(pid):
             timeout=15
         )
         tdata = tresp.json().get('result', {})
-        # result.templates is a list → build lookup dict by str(template_id)
+        # result.templates is a list â build lookup dict by str(template_id)
         templates_dict = {str(t.get('template_id')): t for t in tdata.get('templates', [])}
         templates = []
         seen_tids = set()
