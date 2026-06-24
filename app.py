@@ -31,7 +31,7 @@ SHOPIFY_WEBHOOK_SECRET = os.environ.get('SHOPIFY_WEBHOOK_SECRET', '')
 # GET /mockup-generator/printfiles/{product_id} lists valid placements per product.
 # Apparel uses 'front'; flat/wrap products use 'default'.
 PRODUCT_PLACEMENT = {
-    1:   'front',    # Art Print (poster)
+    1:   'default',  # Art Print (poster)
     3:   'default',  # Canvas Print (stretched canvas)
     19:  'default',  # White Mug (11 oz / 15 oz)
     71:  'front',    # Bella+Canvas 3001 T-Shirt
@@ -40,10 +40,11 @@ PRODUCT_PLACEMENT = {
     234: 'front',    # Baby Bodysuit
     367: 'front',    # Tote Bag
     380: 'front',    # Gildan 18500 Hoodie
-    594: 'front',    # Gym Bag
+    594: 'front',    # Gym Bag (requires position field)
     678: 'default',  # Pet Bowl
-    683: 'front',    # Phone Case
-    711: 'front',    # Sherpa Blanket
+    601: 'default',  # Tough iPhone Case
+    683: 'default',  # Phone Case (snap case — wrap placement)
+    711: 'default',  # Sherpa Blanket
     902: 'front',    # Pet Bandana Collar
 }
 
@@ -55,18 +56,18 @@ _printfile_cache = {}
 # dark=False → keep black lines on white/light substrate
 VARIANT_MAP = {
     # ── T-Shirt (product 71) ──────────────────────────────────────────────
-    58292438237568: {'variant_id': 9575,  'on_dark': True},   # Black Heather / XS
-    58292438270336: {'variant_id': 8923,  'on_dark': True},   # Black Heather / S
-    58292438303104: {'variant_id': 8924,  'on_dark': True},   # Black Heather / M
-    58292438335872: {'variant_id': 8925,  'on_dark': True},   # Black Heather / L
-    58292438368640: {'variant_id': 8926,  'on_dark': True},   # Black Heather / XL
-    58292438401408: {'variant_id': 8927,  'on_dark': True},   # Black Heather / 2XL
-    58292438434176: {'variant_id': 9526,  'on_dark': False},  # White / XS
-    58292438466944: {'variant_id': 4011,  'on_dark': False},  # White / S
-    58292438499712: {'variant_id': 4012,  'on_dark': False},  # White / M
-    58292438532480: {'variant_id': 4013,  'on_dark': False},  # White / L
-    58292438565248: {'variant_id': 4014,  'on_dark': False},  # White / XL
-    58292438598016: {'variant_id': 4015,  'on_dark': False},  # White / 2XL
+    58321490149760: {'variant_id': 9575,  'on_dark': True},   # Black Heather / XS
+    58321490313600: {'variant_id': 8923,  'on_dark': True},   # Black Heather / S
+    58321490346368: {'variant_id': 8924,  'on_dark': True},   # Black Heather / M
+    58321490379136: {'variant_id': 8925,  'on_dark': True},   # Black Heather / L
+    58321490411904: {'variant_id': 8926,  'on_dark': True},   # Black Heather / XL
+    58321490444672: {'variant_id': 8927,  'on_dark': True},   # Black Heather / 2XL
+    58321490477440: {'variant_id': 9526,  'on_dark': False},  # White / XS
+    58321490510208: {'variant_id': 4011,  'on_dark': False},  # White / S
+    58321490542976: {'variant_id': 4012,  'on_dark': False},  # White / M
+    58321490575744: {'variant_id': 4013,  'on_dark': False},  # White / L
+    58321490608512: {'variant_id': 4014,  'on_dark': False},  # White / XL
+    58321490641280: {'variant_id': 4015,  'on_dark': False},  # White / 2XL
 
     # ── Hoodie (product 380) ──────────────────────────────────────────────
     58292420542848: {'variant_id': 10779, 'on_dark': True},   # Black / S
@@ -93,96 +94,130 @@ VARIANT_MAP = {
     58292428767616: {'variant_id': 5429,  'on_dark': False},  # White / XL
 
     # ── Mug (product 19) ─────────────────────────────────────────────────
-    58292442759552: {'variant_id': 1320,  'on_dark': False},  # 11 oz
-    58292442792320: {'variant_id': 4830,  'on_dark': False},  # 15 oz
+    58321490706816: {'variant_id': 1320,  'on_dark': False},  # 11 oz
+    58321490772352: {'variant_id': 4830,  'on_dark': False},  # 15 oz
 
     # ── Tote Bag (product 367) ───────────────────────────────────────────
-    58292449313152: {'variant_id': 10457, 'on_dark': True},   # Black
+    58321530552704: {'variant_id': 10457, 'on_dark': True},   # Black
 
     # ── Canvas Print (product 3) ──────────────────────────────────────────
-    58303853429120: {'variant_id': 823,   'on_dark': False},  # 12x12 in
-    58303853461888: {'variant_id': 5,     'on_dark': False},  # 12x16 in
-    58303853494656: {'variant_id': 6,     'on_dark': False},  # 16x20 in
-    58303853527424: {'variant_id': 7,     'on_dark': False},  # 18x24 in
-    58303853560192: {'variant_id': 825,   'on_dark': False},  # 24x36 in
+    58321490805120: {'variant_id': 823,   'on_dark': False},  # 12x12 in
+    58321491362176: {'variant_id': 5,     'on_dark': False},  # 12x16 in
+    58321491394944: {'variant_id': 6,     'on_dark': False},  # 16x20 in
+    58321491427712: {'variant_id': 7,     'on_dark': False},  # 18x24 in
+    58321491460480: {'variant_id': 825,   'on_dark': False},  # 24x36 in
 
     # ── Throw Pillow (product 214) ────────────────────────────────────────
-    58303853625728: {'variant_id': 7907,  'on_dark': False},  # 20x12 in
-    58303853658496: {'variant_id': 9515,  'on_dark': False},  # 18x18 in
-    58303853691264: {'variant_id': 11077, 'on_dark': False},  # 22x22 in
+    58321491526016: {'variant_id': 7907,  'on_dark': False},  # 20x12 in
+    58321492738432: {'variant_id': 9515,  'on_dark': False},  # 18x18 in
+    58321492771200: {'variant_id': 11077, 'on_dark': False},  # 22x22 in
 
     # ── Sherpa Blanket (product 711) ──────────────────────────────────────
-    58303853855104: {'variant_id': 17483, 'on_dark': False},  # 37x57 in
-    58303853887872: {'variant_id': 17482, 'on_dark': False},  # 50x60 in
-    58303853920640: {'variant_id': 17449, 'on_dark': False},  # 60x80 in
+    58321492869504: {'variant_id': 17483, 'on_dark': False},  # 37x57 in
+    58321492902272: {'variant_id': 17482, 'on_dark': False},  # 50x60 in
+    58321492935040: {'variant_id': 17449, 'on_dark': False},  # 60x80 in
 
     # ── Pet Bandana Collar (product 902) ──────────────────────────────────
-    58303853953408: {'variant_id': 23142, 'on_dark': False},  # S
-    58303853986176: {'variant_id': 23141, 'on_dark': False},  # M
-    58303854018944: {'variant_id': 23140, 'on_dark': False},  # L
-    58303854051712: {'variant_id': 23143, 'on_dark': False},  # XL
+    58321531175296: {'variant_id': 23142, 'on_dark': False},  # S
+    58321540809088: {'variant_id': 23141, 'on_dark': False},  # M
+    58321540841856: {'variant_id': 23140, 'on_dark': False},  # L
+    58321540874624: {'variant_id': 23143, 'on_dark': False},  # XL
 
     # ── Pet Bowl (product 678) ────────────────────────────────────────────
-    58303854084480: {'variant_id': 16785, 'on_dark': False},  # 18 oz
-    58303854117248: {'variant_id': 16786, 'on_dark': False},  # 32 oz
+    58321531535744: {'variant_id': 16785, 'on_dark': False},  # 18 oz
+    58321541104000: {'variant_id': 16786, 'on_dark': False},  # 32 oz
 
     # ── Baby Bodysuit (product 234) ───────────────────────────────────────
-    58318328758656: {'variant_id': 8177,  'on_dark': True},   # Black / 12M
-    58318328791424: {'variant_id': 8178,  'on_dark': True},   # Black / 18M
-    58318328824192: {'variant_id': 8179,  'on_dark': True},   # Black / 24M
-    58318328856960: {'variant_id': 8182,  'on_dark': False},  # Heather / 12M
-    58318328889728: {'variant_id': 8183,  'on_dark': False},  # Heather / 18M
-    58318328922496: {'variant_id': 8184,  'on_dark': False},  # Heather / 24M
-    58318328955264: {'variant_id': 8187,  'on_dark': False},  # Pink / 12M
-    58318328988032: {'variant_id': 8188,  'on_dark': False},  # Pink / 18M
-    58318329020800: {'variant_id': 8189,  'on_dark': False},  # Pink / 24M
-    58318329053568: {'variant_id': 8172,  'on_dark': False},  # White / 12M
-    58318329086336: {'variant_id': 8173,  'on_dark': False},  # White / 18M
-    58318329119104: {'variant_id': 8174,  'on_dark': False},  # White / 24M
+    58321531863424: {'variant_id': 8177,  'on_dark': True},   # Black / 12M
+    58321541267840: {'variant_id': 8178,  'on_dark': True},   # Black / 18M
+    58321541300608: {'variant_id': 8179,  'on_dark': True},   # Black / 24M
+    58321541333376: {'variant_id': 8182,  'on_dark': False},  # Heather / 12M
+    58321541366144: {'variant_id': 8183,  'on_dark': False},  # Heather / 18M
+    58321541398912: {'variant_id': 8184,  'on_dark': False},  # Heather / 24M
+    58321541431680: {'variant_id': 8187,  'on_dark': False},  # Pink / 12M
+    58321541464448: {'variant_id': 8188,  'on_dark': False},  # Pink / 18M
+    58321541497216: {'variant_id': 8189,  'on_dark': False},  # Pink / 24M
+    58321541529984: {'variant_id': 8172,  'on_dark': False},  # White / 12M
+    58321541562752: {'variant_id': 8173,  'on_dark': False},  # White / 18M
+    58321541595520: {'variant_id': 8174,  'on_dark': False},  # White / 24M
 
     # ── Gym Bag (product 594) ─────────────────────────────────────────────
-    58318329151872: {'variant_id': 15155, 'on_dark': False},  # One Size
+    58321531928960: {'variant_id': 15155, 'on_dark': False},  # One Size
 
     # ── Art Print (product 1) ─────────────────────────────────────────────
-    58318329184640: {'variant_id': 4463,  'on_dark': False},  # 8x10 in
-    58318329217408: {'variant_id': 1349,  'on_dark': False},  # 12x16 in
-    58318329250176: {'variant_id': 3877,  'on_dark': False},  # 16x20 in
-    58318329282944: {'variant_id': 1,     'on_dark': False},  # 18x24 in
-    58318329315712: {'variant_id': 2,     'on_dark': False},  # 24x36 in
+    58321538449792: {'variant_id': 4463,  'on_dark': False},  # 8x10 in
+    58321541726592: {'variant_id': 1349,  'on_dark': False},  # 12x16 in
+    58321541759360: {'variant_id': 3877,  'on_dark': False},  # 16x20 in
+    58321541792128: {'variant_id': 1,     'on_dark': False},  # 18x24 in
+    58321541824896: {'variant_id': 2,     'on_dark': False},  # 24x36 in
 
     # ── Phone Case (product 683) ──────────────────────────────────────────
-    58318329708928: {'variant_id': 16910, 'on_dark': False},  # iPhone 14 / Glossy
-    58318329741696: {'variant_id': 16911, 'on_dark': False},  # iPhone 14 / Matte
-    58318329774464: {'variant_id': 16912, 'on_dark': False},  # iPhone 14 Pro / Glossy
-    58318329807232: {'variant_id': 16913, 'on_dark': False},  # iPhone 14 Pro / Matte
-    58318329840000: {'variant_id': 16914, 'on_dark': False},  # iPhone 14 Plus / Glossy
-    58318329872768: {'variant_id': 16915, 'on_dark': False},  # iPhone 14 Plus / Matte
-    58318329905536: {'variant_id': 16916, 'on_dark': False},  # iPhone 14 Pro Max / Glossy
-    58318329938304: {'variant_id': 16917, 'on_dark': False},  # iPhone 14 Pro Max / Matte
-    58318329971072: {'variant_id': 17722, 'on_dark': False},  # iPhone 15 / Glossy
-    58318330003840: {'variant_id': 17723, 'on_dark': False},  # iPhone 15 / Matte
-    58318330036608: {'variant_id': 17726, 'on_dark': False},  # iPhone 15 Pro / Glossy
-    58318330069376: {'variant_id': 17727, 'on_dark': False},  # iPhone 15 Pro / Matte
-    58318330102144: {'variant_id': 17724, 'on_dark': False},  # iPhone 15 Plus / Glossy
-    58318330134912: {'variant_id': 17725, 'on_dark': False},  # iPhone 15 Plus / Matte
-    58318330167680: {'variant_id': 17728, 'on_dark': False},  # iPhone 15 Pro Max / Glossy
-    58318330200448: {'variant_id': 17729, 'on_dark': False},  # iPhone 15 Pro Max / Matte
-    58318330233216: {'variant_id': 20294, 'on_dark': False},  # iPhone 16 / Glossy
-    58318330265984: {'variant_id': 20298, 'on_dark': False},  # iPhone 16 / Matte
-    58318330298752: {'variant_id': 20296, 'on_dark': False},  # iPhone 16 Pro / Glossy
-    58318330331520: {'variant_id': 20300, 'on_dark': False},  # iPhone 16 Pro / Matte
-    58318330364288: {'variant_id': 20295, 'on_dark': False},  # iPhone 16 Plus / Glossy
-    58318330397056: {'variant_id': 20299, 'on_dark': False},  # iPhone 16 Plus / Matte
-    58318330429824: {'variant_id': 20297, 'on_dark': False},  # iPhone 16 Pro Max / Glossy
-    58318330462592: {'variant_id': 20301, 'on_dark': False},  # iPhone 16 Pro Max / Matte
-    58318330495360: {'variant_id': 34009, 'on_dark': False},  # iPhone 17 / Glossy
-    58318330528128: {'variant_id': 34010, 'on_dark': False},  # iPhone 17 / Matte
-    58318330560896: {'variant_id': 34013, 'on_dark': False},  # iPhone 17 Pro / Glossy
-    58318330593664: {'variant_id': 34014, 'on_dark': False},  # iPhone 17 Pro / Matte
-    58318330626432: {'variant_id': 34011, 'on_dark': False},  # iPhone 17 Air / Glossy
-    58318330659200: {'variant_id': 34012, 'on_dark': False},  # iPhone 17 Air / Matte
-    58318330691968: {'variant_id': 34015, 'on_dark': False},  # iPhone 17 Pro Max / Glossy
-    58318330724736: {'variant_id': 34016, 'on_dark': False},  # iPhone 17 Pro Max / Matte
+    58321538548096: {'variant_id': 16910, 'on_dark': False},  # iPhone 14 / Glossy
+    58321542218112: {'variant_id': 16911, 'on_dark': False},  # iPhone 14 / Matte
+    58321542250880: {'variant_id': 16912, 'on_dark': False},  # iPhone 14 Pro / Glossy
+    58321542283648: {'variant_id': 16913, 'on_dark': False},  # iPhone 14 Pro / Matte
+    58321542316416: {'variant_id': 16914, 'on_dark': False},  # iPhone 14 Plus / Glossy
+    58321542349184: {'variant_id': 16915, 'on_dark': False},  # iPhone 14 Plus / Matte
+    58321542381952: {'variant_id': 16916, 'on_dark': False},  # iPhone 14 Pro Max / Glossy
+    58321542414720: {'variant_id': 16917, 'on_dark': False},  # iPhone 14 Pro Max / Matte
+    58321542447488: {'variant_id': 17722, 'on_dark': False},  # iPhone 15 / Glossy
+    58321542480256: {'variant_id': 17723, 'on_dark': False},  # iPhone 15 / Matte
+    58321542513024: {'variant_id': 17726, 'on_dark': False},  # iPhone 15 Pro / Glossy
+    58321542545792: {'variant_id': 17727, 'on_dark': False},  # iPhone 15 Pro / Matte
+    58321542578560: {'variant_id': 17724, 'on_dark': False},  # iPhone 15 Plus / Glossy
+    58321542611328: {'variant_id': 17725, 'on_dark': False},  # iPhone 15 Plus / Matte
+    58321542644096: {'variant_id': 17728, 'on_dark': False},  # iPhone 15 Pro Max / Glossy
+    58321542676864: {'variant_id': 17729, 'on_dark': False},  # iPhone 15 Pro Max / Matte
+    58321542709632: {'variant_id': 20294, 'on_dark': False},  # iPhone 16 / Glossy
+    58321542742400: {'variant_id': 20298, 'on_dark': False},  # iPhone 16 / Matte
+    58321542775168: {'variant_id': 20296, 'on_dark': False},  # iPhone 16 Pro / Glossy
+    58321542807936: {'variant_id': 20300, 'on_dark': False},  # iPhone 16 Pro / Matte
+    58321542840704: {'variant_id': 20295, 'on_dark': False},  # iPhone 16 Plus / Glossy
+    58321542873472: {'variant_id': 20299, 'on_dark': False},  # iPhone 16 Plus / Matte
+    58321542906240: {'variant_id': 20297, 'on_dark': False},  # iPhone 16 Pro Max / Glossy
+    58321542939008: {'variant_id': 20301, 'on_dark': False},  # iPhone 16 Pro Max / Matte
+    58321542971776: {'variant_id': 34009, 'on_dark': False},  # iPhone 17 / Glossy
+    58321543004544: {'variant_id': 34010, 'on_dark': False},  # iPhone 17 / Matte
+    58321543037312: {'variant_id': 34011, 'on_dark': False},  # iPhone 17 Air / Glossy
+    58321543070080: {'variant_id': 34012, 'on_dark': False},  # iPhone 17 Air / Matte
+    58321543102848: {'variant_id': 34013, 'on_dark': False},  # iPhone 17 Pro / Glossy
+    58321543135616: {'variant_id': 34014, 'on_dark': False},  # iPhone 17 Pro / Matte
+    58321543168384: {'variant_id': 34015, 'on_dark': False},  # iPhone 17 Pro Max / Glossy
+    58321543201152: {'variant_id': 34016, 'on_dark': False},  # iPhone 17 Pro Max / Matte
+
+    # ── Tough iPhone Case (product 601) ───────────────────────────────────────
+    58323893289344: {'variant_id': 16124, 'on_dark': False},  # iPhone 14 / Glossy
+    58323893322112: {'variant_id': 16125, 'on_dark': False},  # iPhone 14 / Matte
+    58323893354880: {'variant_id': 16126, 'on_dark': False},  # iPhone 14 Pro / Glossy
+    58323893387648: {'variant_id': 16127, 'on_dark': False},  # iPhone 14 Pro / Matte
+    58323893420416: {'variant_id': 16128, 'on_dark': False},  # iPhone 14 Plus / Glossy
+    58323893453184: {'variant_id': 16129, 'on_dark': False},  # iPhone 14 Plus / Matte
+    58323893485952: {'variant_id': 16130, 'on_dark': False},  # iPhone 14 Pro Max / Glossy
+    58323893518720: {'variant_id': 16131, 'on_dark': False},  # iPhone 14 Pro Max / Matte
+    58323893551488: {'variant_id': 17714, 'on_dark': False},  # iPhone 15 / Glossy
+    58323893584256: {'variant_id': 17715, 'on_dark': False},  # iPhone 15 / Matte
+    58323893617024: {'variant_id': 17718, 'on_dark': False},  # iPhone 15 Pro / Glossy
+    58323893649792: {'variant_id': 17719, 'on_dark': False},  # iPhone 15 Pro / Matte
+    58323893682560: {'variant_id': 17716, 'on_dark': False},  # iPhone 15 Plus / Glossy
+    58323893715328: {'variant_id': 17717, 'on_dark': False},  # iPhone 15 Plus / Matte
+    58323893748096: {'variant_id': 17720, 'on_dark': False},  # iPhone 15 Pro Max / Glossy
+    58323893780864: {'variant_id': 17721, 'on_dark': False},  # iPhone 15 Pro Max / Matte
+    58323893813632: {'variant_id': 20302, 'on_dark': False},  # iPhone 16 / Glossy
+    58323893846400: {'variant_id': 20306, 'on_dark': False},  # iPhone 16 / Matte
+    58323893879168: {'variant_id': 20304, 'on_dark': False},  # iPhone 16 Pro / Glossy
+    58323893911936: {'variant_id': 20308, 'on_dark': False},  # iPhone 16 Pro / Matte
+    58323893944704: {'variant_id': 20303, 'on_dark': False},  # iPhone 16 Plus / Glossy
+    58323893977472: {'variant_id': 20307, 'on_dark': False},  # iPhone 16 Plus / Matte
+    58323894010240: {'variant_id': 20305, 'on_dark': False},  # iPhone 16 Pro Max / Glossy
+    58323894043008: {'variant_id': 20309, 'on_dark': False},  # iPhone 16 Pro Max / Matte
+    58323894075776: {'variant_id': 33985, 'on_dark': False},  # iPhone 17 / Glossy
+    58323894108544: {'variant_id': 33989, 'on_dark': False},  # iPhone 17 / Matte
+    58323894141312: {'variant_id': 33986, 'on_dark': False},  # iPhone 17 Air / Glossy
+    58323894174080: {'variant_id': 33990, 'on_dark': False},  # iPhone 17 Air / Matte
+    58323894206848: {'variant_id': 33987, 'on_dark': False},  # iPhone 17 Pro / Glossy
+    58323894239616: {'variant_id': 33991, 'on_dark': False},  # iPhone 17 Pro / Matte
+    58323894272384: {'variant_id': 33988, 'on_dark': False},  # iPhone 17 Pro Max / Glossy
+    58323894305152: {'variant_id': 33992, 'on_dark': False},  # iPhone 17 Pro Max / Matte
 }
 
 
@@ -212,17 +247,30 @@ def generate_line_art(photo_url: str):
 
 def process_line_art(img_bytes: bytes, on_dark: bool) -> bytes:
     """Convert line art to transparent PNG for dark or light products.
-    - on_dark=True:  invert (black->white lines) + make near-black transparent
+    - on_dark=True:  invert (black->white lines), use brightness as alpha,
+                     force RGB to pure white — crisp white lines, no colour tint
     - on_dark=False: keep black lines + make near-white transparent
     """
     img = Image.open(io.BytesIO(img_bytes)).convert('RGBA')
     data = np.array(img, dtype=np.uint8)
 
     if on_dark:
+        # Invert: black lines become white, white background becomes black
         data[:, :, :3] = 255 - data[:, :, :3]
-        r, g, b = data[:, :, 0], data[:, :, 1], data[:, :, 2]
-        mask = (r < 60) & (g < 60) & (b < 60)
-        data[mask, 3] = 0
+        r = data[:, :, 0].astype(np.float32)
+        g = data[:, :, 1].astype(np.float32)
+        b = data[:, :, 2].astype(np.float32)
+        # Use per-channel minimum as brightness proxy — only truly white pixels
+        # (from originally black lines) score near 255; everything else falls off.
+        # gamma=2 pushes mid-grays toward transparent, sharpening the result.
+        min_chan = np.minimum(np.minimum(r, g), b)
+        # Threshold at 40: any pixel brighter than ~16% gets full opacity.
+        # This ensures all line pixels (min_chan >> 40 after inversion) become
+        # fully opaque white, giving crisp bright lines in the Printful mockup.
+        alpha = np.clip(min_chan.astype(np.float32) * (255.0 / 40.0), 0, 255).astype(np.uint8)
+        # Force RGB to pure white so no brownish/warm tint survives in Printful mockup
+        data[:, :, :3] = 255
+        data[:, :, 3] = alpha
     else:
         r, g, b = data[:, :, 0], data[:, :, 1], data[:, :, 2]
         mask = (r > 200) & (g > 200) & (b > 200)
@@ -459,6 +507,89 @@ def mockup_poll():
         return jsonify({'error': str(e)}), 500
 
 
+_TRANSPARENT_PNG_B64 = (
+    'iVBORw0KGgoAAAANSUhEUgAABBoAAAdsCAYAAAABT+8eAAAeTUlEQVR42u3BMQEAAADCoPVPbQ0Po'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAeA3'
+    'SYwABQXFW8gAAAAASUVORK5CYII='
+)
+
+
+@app.route('/transparent-png')
+def transparent_png():
+    """Serve 1050×1900 transparent PNG — used as blank design for Printful mockup generation."""
+    from flask import send_file
+    return send_file(
+        io.BytesIO(base64.b64decode(_TRANSPARENT_PNG_B64)),
+        mimetype='image/png',
+        download_name='transparent.png'
+    )
+
+
 @app.route('/webhook/order', methods=['POST'])
 def shopify_order_webhook():
     """
@@ -525,7 +656,7 @@ def shopify_order_webhook():
             continue
 
         props = {p['name']: p['value'] for p in item.get('properties', [])}
-        line_art_url = props.get('Line Art Preview', '').strip()
+        line_art_url = props.get('_Line Art Preview', props.get('Line Art Preview', '')).strip()
 
         if not line_art_url:
             skipped.append(f"variant {shopify_variant_id} (no Line Art Preview property)")
