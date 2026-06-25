@@ -401,7 +401,38 @@ def process():
     if not os.environ.get('FAL_KEY'):
         return jsonify({'error': 'Missing FAL_KEY env var'}), 400
     try:
+        # Capture original photo dimensions before generating line art
+        try:
+            orig_req = urllib.request.Request(photo_url, headers={'User-Agent': 'SoulmateAPI/15'})
+            with urllib.request.urlopen(orig_req, timeout=30) as r:
+                orig_bytes = r.read()
+            orig_img = Image.open(io.BytesIO(orig_bytes))
+            orig_w, orig_h = orig_img.size
+        except Exception:
+            orig_w, orig_h = None, None
+
         line_art_url, lineart_bytes = generate_line_art(photo_url)
+
+        # Fal.ai may output at a different aspect ratio than the input (e.g. 2K landscape).
+        # Resize the line art to match the original photo's exact dimensions so the widget
+        # computes imgAspect correctly and the design placed on the product is proportioned
+        # the same way the customer sees it in the preview.
+        if orig_w and orig_h:
+            la_img = Image.open(io.BytesIO(lineart_bytes))
+            la_w, la_h = la_img.size
+            if la_w != orig_w or la_h != orig_h:
+                la_img = la_img.resize((orig_w, orig_h), Image.LANCZOS)
+                buf = io.BytesIO()
+                la_img.save(buf, 'JPEG', quality=92)
+                lineart_bytes = buf.getvalue()
+                # Upload resized version so line_art_url also has correct dimensions
+                with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as tmp:
+                    tmp.write(lineart_bytes)
+                    tmp_path = tmp.name
+                try:
+                    line_art_url = fal_client.upload_file(tmp_path)
+                finally:
+                    os.unlink(tmp_path)
     except Exception as e:
         import traceback
         return jsonify({'error': f'[fal-nano-banana-pro] {e}',
