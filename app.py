@@ -428,7 +428,7 @@ def get_template_info(product_id: int, printful_variant_id, placement: str) -> d
 def health():
     return jsonify({
         'status': 'ok',
-        'service': 'Soulmate Custom Gifts — Photo Outline API v21',
+        'service': 'Soulmate Custom Gifts — Photo Outline API v22',
         'pipeline': 'fal.ai nano-banana-pro/edit -> fine line drawing + Printful mockups + order fulfillment',
         'endpoints': ['/api/process', '/mockup/start', '/mockup/poll', '/placement-info/<product_id>', '/webhook/order']
     })
