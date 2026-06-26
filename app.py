@@ -99,6 +99,7 @@ VARIANT_MAP = {
 
     # ── Tote Bag (product 367) ───────────────────────────────────────────
     58321530552704: {'variant_id': 10457, 'on_dark': True},   # Black
+    58333599236480: {'variant_id': 10458, 'on_dark': False},  # Oyster (cream)
 
     # ── Canvas Print (product 3) ──────────────────────────────────────────
     58321490805120: {'variant_id': 823,   'on_dark': False},  # 12x12 in
