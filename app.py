@@ -299,9 +299,11 @@ def prepare_design_url(line_art_url: str, on_dark: bool) -> str:
         os.unlink(tmp_path)
 
 
-def get_position_for_product(product_id: int, placement: str) -> dict:
-    """Fetch print area dimensions from Printful printfiles API (cached per product/placement)."""
-    cache_key = (product_id, placement)
+def get_position_for_product(product_id: int, placement: str, printful_variant_id=None) -> dict:
+    """Fetch the print-area dimensions for a SPECIFIC variant from Printful's printfiles
+    API. Different sizes (e.g. 8x10 vs 24x36 posters) use different printfiles, so this is
+    variant-aware. Cached per (product, placement, variant)."""
+    cache_key = (product_id, placement, printful_variant_id)
     if cache_key in _printfile_cache:
         return _printfile_cache[cache_key]
 
@@ -312,10 +314,23 @@ def get_position_for_product(product_id: int, placement: str) -> dict:
             headers={'Authorization': f'Bearer {PRINTFUL_KEY}'},
             timeout=15
         )
-        data = resp.json()
-        printfiles = data.get('result', {}).get('printfiles', [])
-        pf = next((p for p in printfiles if p.get('placement') == placement), None)
-        if not pf and printfiles:
+        data       = resp.json().get('result', {})
+        printfiles = data.get('printfiles', [])
+        by_id      = {p.get('printfile_id'): p for p in printfiles}
+
+        # Resolve the printfile mapped to THIS variant + placement (size-specific)
+        pfid = None
+        if printful_variant_id:
+            vp = next((v for v in data.get('variant_printfiles', [])
+                       if v.get('variant_id') == printful_variant_id), None)
+            if vp:
+                placements = vp.get('placements', {})
+                pfid = placements.get(placement) or (
+                    next(iter(placements.values()), None) if placements else None)
+
+        if pfid is not None and pfid in by_id:
+            pf = by_id[pfid]
+        elif printfiles:
             pf = printfiles[0]
     except Exception:
         pf = None
@@ -412,7 +427,7 @@ def get_template_info(product_id: int, printful_variant_id, placement: str) -> d
 def health():
     return jsonify({
         'status': 'ok',
-        'service': 'Soulmate Custom Gifts — Photo Outline API v19',
+        'service': 'Soulmate Custom Gifts — Photo Outline API v20',
         'pipeline': 'fal.ai nano-banana-pro/edit -> fine line drawing + Printful mockups + order fulfillment',
         'endpoints': ['/api/process', '/mockup/start', '/mockup/poll', '/placement-info/<product_id>', '/webhook/order']
     })
@@ -538,7 +553,7 @@ def mockup_start():
         if custom_position:
             position = custom_position
         else:
-            position = get_position_for_product(product_id, placement)
+            position = get_position_for_product(product_id, placement, (variant_ids or [None])[0])
 
         task_payload = {
             'variant_ids': variant_ids,
@@ -625,7 +640,7 @@ def placement_info(product_id):
 
     pf_variant = request.args.get('pf_variant', type=int)
     tpl        = get_template_info(product_id, pf_variant, placement)
-    position   = get_position_for_product(product_id, placement)
+    position   = get_position_for_product(product_id, placement, pf_variant)
 
     return jsonify({
         'success':         True,
@@ -818,7 +833,7 @@ def shopify_order_webhook():
             except (json.JSONDecodeError, ValueError):
                 position = None
         if not position:
-            position = get_position_for_product(product_id, placement) if product_id else {
+            position = get_position_for_product(product_id, placement, printful_variant_id) if product_id else {
                 'area_width': 1800, 'area_height': 2400,
                 'width': 1800, 'height': 2400,
                 'top': 0, 'left': 0, 'limit_to_print_area': True,
