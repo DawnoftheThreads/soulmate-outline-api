@@ -346,6 +346,63 @@ def get_position_for_product(product_id: int, placement: str) -> dict:
     return position
 
 
+def get_template_info(product_id: int, printful_variant_id, placement: str) -> dict:
+    """Fetch Printful's mockup TEMPLATE for a product (+variant +placement) and derive
+    the on-screen print-zone rectangle as fractions of the template image, plus the
+    template image URL. This is the authoritative source that replaces hand-typed zones.
+    Cached per (product_id, variant_id, placement)."""
+    cache_key = ('tpl', product_id, printful_variant_id, placement)
+    if cache_key in _printfile_cache:
+        return _printfile_cache[cache_key]
+
+    info = None
+    try:
+        resp = http_requests.get(
+            f'https://api.printful.com/mockup-generator/templates/{product_id}',
+            headers={'Authorization': f'Bearer {PRINTFUL_KEY}'},
+            timeout=15
+        )
+        result    = resp.json().get('result', {})
+        templates = result.get('templates', [])
+        mappings  = result.get('variant_mapping', [])
+
+        # Find the template_id mapped to this variant for the requested placement
+        template_id = None
+        if printful_variant_id:
+            vm = next((m for m in mappings if m.get('variant_id') == printful_variant_id), None)
+            if vm:
+                t = next((x for x in vm.get('templates', []) if x.get('placement') == placement), None)
+                if not t and vm.get('templates'):
+                    t = vm['templates'][0]
+                if t:
+                    template_id = t.get('template_id')
+
+        tpl = next((x for x in templates if x.get('template_id') == template_id), None)
+        if not tpl:
+            tpl = next((x for x in templates if x.get('placement') == placement), None) \
+                  or (templates[0] if templates else None)
+
+        if tpl and tpl.get('template_width') and tpl.get('template_height'):
+            tw = float(tpl['template_width'])
+            th = float(tpl['template_height'])
+            info = {
+                'zone': {
+                    'l': round(tpl.get('print_area_left', 0)   / tw, 4),
+                    't': round(tpl.get('print_area_top', 0)    / th, 4),
+                    'w': round(tpl.get('print_area_width', tw) / tw, 4),
+                    'h': round(tpl.get('print_area_height', th) / th, 4),
+                },
+                'image_url':       tpl.get('image_url') or tpl.get('background_url'),
+                'template_width':  tpl['template_width'],
+                'template_height': tpl['template_height'],
+            }
+    except Exception:
+        info = None
+
+    _printfile_cache[cache_key] = info
+    return info
+
+
 # ============================================================================
 # ROUTES
 # ============================================================================
@@ -355,8 +412,9 @@ def get_position_for_product(product_id: int, placement: str) -> dict:
 def health():
     return jsonify({
         'status': 'ok',
-        'service': 'Soulmate Custom Gifts — Photo Outline API v17',
-        'pipeline': 'fal.ai nano-banana-pro/edit -> fine line drawing + Printful mockups + order fulfillment'
+        'service': 'Soulmate Custom Gifts — Photo Outline API v19',
+        'pipeline': 'fal.ai nano-banana-pro/edit -> fine line drawing + Printful mockups + order fulfillment',
+        'endpoints': ['/api/process', '/mockup/start', '/mockup/poll', '/placement-info/<product_id>', '/webhook/order']
     })
 
 
@@ -536,6 +594,49 @@ def mockup_poll():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@app.route('/placement-info/<int:product_id>', methods=['GET', 'OPTIONS'])
+def placement_info(product_id):
+    """Authoritative placement data for the storefront customizer.
+    Returns the print-zone rectangle (as fractions of the template image), the
+    print-area dimensions (Printful position units), and the template image URL —
+    so the front-end never has to hand-tune offsets again.
+
+    Query params:
+      pf_variant=<printful_variant_id>   pick the exact colour template (optional)
+      debug=1                            return raw Printful template payload
+    """
+    if request.method == 'OPTIONS':
+        return '', 200
+    if not PRINTFUL_KEY:
+        return jsonify({'error': 'Missing PRINTFUL_KEY env var'}), 400
+
+    placement = PRODUCT_PLACEMENT.get(product_id, 'front')
+
+    # Debug: dump the raw Printful template payload so we can verify in the browser
+    if request.args.get('debug'):
+        resp = http_requests.get(
+            f'https://api.printful.com/mockup-generator/templates/{product_id}',
+            headers={'Authorization': f'Bearer {PRINTFUL_KEY}'},
+            timeout=15
+        )
+        return jsonify(resp.json())
+
+    pf_variant = request.args.get('pf_variant', type=int)
+    tpl        = get_template_info(product_id, pf_variant, placement)
+    position   = get_position_for_product(product_id, placement)
+
+    return jsonify({
+        'success':         True,
+        'product_id':      product_id,
+        'placement':       placement,
+        'zone':            (tpl or {}).get('zone'),
+        'image_url':       (tpl or {}).get('image_url'),
+        'template_width':  (tpl or {}).get('template_width'),
+        'template_height': (tpl or {}).get('template_height'),
+        'printArea':       {'w': position['area_width'], 'h': position['area_height']},
+    })
 
 
 _TRANSPARENT_PNG_B64 = (
