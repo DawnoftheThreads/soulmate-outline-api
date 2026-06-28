@@ -590,9 +590,16 @@ def mockup_start():
         )
 
         if resp.status_code == 429:
+            # Printful is rate-limiting us (load spike). Don't fail the customer —
+            # tell the front-end to wait and retry, so they just see "still working".
             RENDER_STATS['rate_limited_429'] += 1
             _record_render('rate_limited')
-            return jsonify({'error': 'Printful rate limit (429)'}), 429
+            retry_after = 6
+            try:
+                retry_after = max(3, int(resp.headers.get('Retry-After', 6)))
+            except (TypeError, ValueError):
+                retry_after = 6
+            return jsonify({'success': False, 'retry': True, 'retry_after': retry_after}), 200
 
         resp_data = resp.json()
         if resp_data.get('code') != 200:
