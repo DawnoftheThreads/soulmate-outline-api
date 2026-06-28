@@ -1,7 +1,8 @@
 from flask import Flask, request, jsonify
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-import urllib.request, base64, os, tempfile, io, hmac, hashlib, json
+import urllib.request, base64, os, tempfile, io, hmac, hashlib, json, time
+from collections import deque
 import fal_client
 import requests as http_requests
 from PIL import Image
@@ -26,6 +27,25 @@ PROMPT = (
 PRINTFUL_KEY       = os.environ.get('PRINTFUL_KEY')        # mockup token (read scopes)
 PRINTFUL_ORDER_KEY = os.environ.get('PRINTFUL_ORDER_KEY')  # orders write token
 SHOPIFY_WEBHOOK_SECRET = os.environ.get('SHOPIFY_WEBHOOK_SECRET', '')
+
+# ── Render monitoring (in-memory; resets on deploy/restart) ────────────────
+# Tracks how long each mockup render takes and whether Printful rate-limited us,
+# so /health/renders can surface contention and the scheduled checker can flag it.
+RENDER_STATS = {
+    'starts': {},                 # task_key -> start epoch (to compute duration on completion)
+    'log': deque(maxlen=500),     # recent renders: {ts, duration, status}
+    'rate_limited_429': 0,        # count of Printful 429 responses since restart
+    'boot': time.time(),
+}
+
+def _record_render(status, duration=None):
+    RENDER_STATS['log'].append({'ts': time.time(), 'duration': duration, 'status': status})
+
+def _prune_stale_starts(max_age=900):
+    now = time.time()
+    stale = [k for k, t in RENDER_STATS['starts'].items() if now - t > max_age]
+    for k in stale:
+        RENDER_STATS['starts'].pop(k, None)
 
 # ── Per-product placement for Printful Mockup Generator API ───────────────
 # GET /mockup-generator/printfiles/{product_id} lists valid placements per product.
@@ -569,11 +589,18 @@ def mockup_start():
             timeout=30
         )
 
+        if resp.status_code == 429:
+            RENDER_STATS['rate_limited_429'] += 1
+            _record_render('rate_limited')
+            return jsonify({'error': 'Printful rate limit (429)'}), 429
+
         resp_data = resp.json()
         if resp_data.get('code') != 200:
             return jsonify({'error': f'Printful error: {resp_data}'}), 500
 
         task_key = resp_data['result']['task_key']
+        _prune_stale_starts()
+        RENDER_STATS['starts'][task_key] = time.time()  # mark render start for duration tracking
         return jsonify({'success': True, 'task_key': task_key})
 
     except Exception as e:
@@ -596,20 +623,85 @@ def mockup_poll():
             headers={'Authorization': f'Bearer {PRINTFUL_KEY}'},
             timeout=15
         )
+        if resp.status_code == 429:
+            RENDER_STATS['rate_limited_429'] += 1
+            _record_render('rate_limited')
+            return jsonify({'status': 'pending'})  # tell front-end to keep polling, don't fail
+
         result = resp.json().get('result', {})
         status = result.get('status', 'unknown')
 
         if status == 'completed':
             mockups = result.get('mockups', [])
             urls = [m['mockup_url'] for m in mockups[:3]]
+            started = RENDER_STATS['starts'].pop(task_key, None)
+            _record_render('completed', round(time.time() - started, 1) if started else None)
             return jsonify({'status': 'completed', 'mockup_urls': urls})
         elif status == 'failed':
+            RENDER_STATS['starts'].pop(task_key, None)
+            _record_render('failed')
             return jsonify({'status': 'failed', 'error': 'Mockup generation failed'}), 500
         else:
             return jsonify({'status': status})
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@app.route('/health/renders', methods=['GET'])
+def health_renders():
+    """Render-performance summary for monitoring. Reports timing, failures and Printful
+    rate-limits over a rolling window, plus a plain verdict (ok / watch / act)."""
+    try:
+        window = int(request.args.get('hours', '24'))
+    except ValueError:
+        window = 24
+    cutoff = time.time() - window * 3600
+    recent = [r for r in RENDER_STATS['log'] if r['ts'] >= cutoff]
+
+    completed = [r for r in recent if r['status'] == 'completed' and r['duration'] is not None]
+    durations = sorted(r['duration'] for r in completed)
+    failed = sum(1 for r in recent if r['status'] == 'failed')
+    rate_limited = sum(1 for r in recent if r['status'] == 'rate_limited')
+    total = len(recent)
+
+    def pct(p):
+        if not durations:
+            return None
+        i = min(len(durations) - 1, int(round((p / 100.0) * (len(durations) - 1))))
+        return durations[i]
+
+    avg = round(sum(durations) / len(durations), 1) if durations else None
+    p95 = pct(95)
+    mx = durations[-1] if durations else None
+    fail_rate = round(failed / total, 2) if total else 0
+
+    # Verdict thresholds — tuned for the Printful mockup generator (~15-40s is normal)
+    verdict, reasons = 'ok', []
+    if rate_limited > 0:
+        verdict = 'act'; reasons.append(f'Printful rate-limited {rate_limited}x (429) — throttle/queue requests, do NOT just add workers')
+    if fail_rate > 0.2 and total >= 5:
+        verdict = 'act'; reasons.append(f'high failure rate {int(fail_rate*100)}%')
+    elif avg and avg > 50:
+        verdict = 'act'; reasons.append(f'avg render {avg}s is very high — add a worker / more Railway resources')
+    elif (avg and avg > 35) or (p95 and p95 > 55) or (fail_rate > 0.1 and total >= 5):
+        if verdict != 'act':
+            verdict = 'watch'; reasons.append('renders trending slow — keep an eye on it')
+
+    return jsonify({
+        'window_hours': window,
+        'renders': total,
+        'completed': len(completed),
+        'avg_seconds': avg,
+        'p95_seconds': p95,
+        'max_seconds': mx,
+        'failed': failed,
+        'fail_rate': fail_rate,
+        'rate_limited_429': rate_limited,
+        'verdict': verdict,
+        'reasons': reasons,
+        'uptime_hours': round((time.time() - RENDER_STATS['boot']) / 3600, 1),
+    })
 
 
 @app.route('/placement-info/<int:product_id>', methods=['GET', 'OPTIONS'])
