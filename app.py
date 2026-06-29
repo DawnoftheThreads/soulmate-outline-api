@@ -28,14 +28,14 @@ PROMPT = (
 # detail, so this produces thick, even-weight, simplified contours that stitch cleanly — and
 # aims to look more finished/intentional than typical rough POD embroidery line art.
 BOLD_PROMPT = (
-    'Convert this photo into a BOLD, minimal single-colour outline illustration designed for '
-    'machine embroidery. Use thick, even-weight, continuous closed outlines only — like a clean, '
-    'confident logo or sticker outline. Drastically SIMPLIFY: keep only the essential shapes and '
-    'silhouette of the subject(s); merge or omit small details, individual hair strands, skin '
-    'texture, wrinkles and background. Absolutely no thin lines, no cross-hatching, no shading, '
-    'no gradients, no grey tones, no fills. Every line must be heavy enough to embroider cleanly. '
-    'Keep the composition balanced, elegant and instantly recognisable. Pure white background. '
-    '2K resolution.'
+    'Redraw this photo as a BOLD line-art PORTRAIT of the same person or people in the photo. '
+    'Preserve their pose, proportions, hairstyles, clothing shapes and likeness so they remain '
+    'clearly recognisable as the same subjects. Draw with thick, even-weight black outlines. '
+    'Simplify only the level of detail: turn fine lines, hair strands, skin texture and small '
+    'features into clean, confident, heavier strokes suitable for machine embroidery. Do NOT add '
+    'or invent any objects, jewellery, logos, icons, text or backgrounds. No thin lines, no '
+    'cross-hatching, no shading, no grey tones, no fills. Just a bold, polished line drawing of '
+    'the subjects on a pure white background. 2K resolution.'
 )
 
 PRINTFUL_KEY       = os.environ.get('PRINTFUL_KEY')        # mockup token (read scopes)
@@ -510,6 +510,10 @@ def process():
         return jsonify({'error': 'Missing FAL_KEY env var'}), 400
     style = str(data.get('style') or 'fine').lower()        # 'fine' (default, printed) or 'bold' (embroidery)
     art_prompt = BOLD_PROMPT if style == 'bold' else PROMPT
+    # Temporary: allow a prompt override for rapid bold-art tuning (pre-launch only).
+    _ov = data.get('prompt_override')
+    if isinstance(_ov, str) and len(_ov.strip()) > 15:
+        art_prompt = _ov.strip()
     try:
         # Capture original photo dimensions before generating line art
         try:
