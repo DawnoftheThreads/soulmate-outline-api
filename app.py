@@ -733,6 +733,34 @@ def health_renders():
     })
 
 
+@app.route('/debug/product/<int:product_id>', methods=['GET'])
+def debug_product(product_id):
+    """TEMP: inspect a Printful catalog product's available placements (incl. embroidery)
+    and their extra cost, so we can wire up embroidered products. Read-only."""
+    if not PRINTFUL_KEY:
+        return jsonify({'error': 'Missing PRINTFUL_KEY'}), 400
+    try:
+        r = http_requests.get(
+            f'https://api.printful.com/products/{product_id}',
+            headers={'Authorization': f'Bearer {PRINTFUL_KEY}'}, timeout=20)
+        res = r.json().get('result', {})
+        prod = res.get('product', {})
+        files = prod.get('files', [])
+        options = prod.get('options', [])
+        variants = res.get('variants', [])
+        return jsonify({
+            'id': prod.get('id'),
+            'title': prod.get('title'),
+            'placements': [{'id': f.get('id'), 'title': f.get('title'), 'type': f.get('type'),
+                            'additional_price': f.get('additional_price')} for f in files],
+            'options': [{'id': o.get('id'), 'title': o.get('title')} for o in options],
+            'variant_count': len(variants),
+            'sample_variant_price': (variants[0].get('price') if variants else None),
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 @app.route('/placement-info/<int:product_id>', methods=['GET', 'OPTIONS'])
 def placement_info(product_id):
     """Authoritative placement data for the storefront customizer.
