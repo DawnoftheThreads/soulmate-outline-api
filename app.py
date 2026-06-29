@@ -128,6 +128,30 @@ VARIANT_MAP = {
     58292428734848: {'variant_id': 5428,  'on_dark': False},  # White / L
     58292428767616: {'variant_id': 5429,  'on_dark': False},  # White / XL
 
+    # ── EMBROIDERED Hoodie (product 380, same blanks, embroidery_chest_center) ──
+    58348511756672: {'variant_id': 10779, 'on_dark': True},   # Black / S
+    58348511789440: {'variant_id': 10780, 'on_dark': True},   # Black / M
+    58348511822208: {'variant_id': 10781, 'on_dark': True},   # Black / L
+    58348511854976: {'variant_id': 10782, 'on_dark': True},   # Black / XL
+    58348511887744: {'variant_id': 10783, 'on_dark': True},   # Black / 2XL
+    58348511920512: {'variant_id': 13416, 'on_dark': True},   # Black / 3XL
+    58348511953280: {'variant_id': 10774, 'on_dark': False},  # White / S
+    58348511986048: {'variant_id': 10775, 'on_dark': False},  # White / M
+    58348512018816: {'variant_id': 10776, 'on_dark': False},  # White / L
+    58348512051584: {'variant_id': 10777, 'on_dark': False},  # White / XL
+    58348512084352: {'variant_id': 10778, 'on_dark': False},  # White / 2XL
+    58348512117120: {'variant_id': 13421, 'on_dark': False},  # White / 3XL
+
+    # ── EMBROIDERED Sweatshirt (product 145, same blanks, embroidery_chest_center) ──
+    58348515983744: {'variant_id': 5434,  'on_dark': True},   # Black / S
+    58348516016512: {'variant_id': 5435,  'on_dark': True},   # Black / M
+    58348516049280: {'variant_id': 5436,  'on_dark': True},   # Black / L
+    58348516082048: {'variant_id': 5437,  'on_dark': True},   # Black / XL
+    58348516114816: {'variant_id': 5426,  'on_dark': False},  # White / S
+    58348516147584: {'variant_id': 5427,  'on_dark': False},  # White / M
+    58348516180352: {'variant_id': 5428,  'on_dark': False},  # White / L
+    58348516213120: {'variant_id': 5429,  'on_dark': False},  # White / XL
+
     # ── Mug (product 19) ─────────────────────────────────────────────────
     58321490706816: {'variant_id': 1320,  'on_dark': False},  # 11 oz
     58321490772352: {'variant_id': 4830,  'on_dark': False},  # 15 oz
