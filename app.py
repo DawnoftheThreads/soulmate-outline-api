@@ -28,14 +28,15 @@ PROMPT = (
 # detail, so this produces thick, even-weight, simplified contours that stitch cleanly — and
 # aims to look more finished/intentional than typical rough POD embroidery line art.
 BOLD_PROMPT = (
-    'Redraw this photo as a BOLD line-art PORTRAIT of the same person or people in the photo. '
-    'Preserve their pose, proportions, hairstyles, clothing shapes and likeness so they remain '
-    'clearly recognisable as the same subjects. Draw with thick, even-weight black outlines. '
-    'Simplify only the level of detail: turn fine lines, hair strands, skin texture and small '
-    'features into clean, confident, heavier strokes suitable for machine embroidery. Do NOT add '
-    'or invent any objects, jewellery, logos, icons, text or backgrounds. No thin lines, no '
-    'cross-hatching, no shading, no grey tones, no fills. Just a bold, polished line drawing of '
-    'the subjects on a pure white background. 2K resolution.'
+    'Redraw the subject(s) in this photo (people and/or pets) as a MINIMAL, heavily simplified '
+    'BOLD line illustration for machine embroidery. Use only thick, smooth, uniform-weight '
+    'outlines. Capture their pose and likeness with as FEW lines as possible. Show hair or fur as '
+    'a few large simple flowing shapes with NO individual strands. Draw clothing as plain bold '
+    'outlines only with NO fabric texture, NO knit or ribbing lines, NO folds. Simplify each face '
+    'to a handful of clean confident lines only. Do NOT add or invent any objects, jewellery, '
+    'logos, text or background. Remove ALL fine detail, shading, hatching, dots and background. '
+    'Every line must be thick and generously spaced so it embroiders cleanly. Keep the subjects '
+    'clearly recognisable. Pure white background, single colour. 2K resolution.'
 )
 
 PRINTFUL_KEY       = os.environ.get('PRINTFUL_KEY')        # mockup token (read scopes)
