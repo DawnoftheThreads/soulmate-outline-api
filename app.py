@@ -590,7 +590,9 @@ def mockup_start():
         design_url = prepare_design_url(line_art_url, on_dark)
 
         # Use product-specific placement — apparel needs 'front', flat/wrap products use 'default'
-        placement = PRODUCT_PLACEMENT.get(product_id, 'front')
+        # Explicit placement wins (e.g. 'embroidery_chest_center' for embroidered products),
+        # otherwise fall back to the product's default print placement.
+        placement = data.get('placement') or PRODUCT_PLACEMENT.get(product_id, 'front')
 
         # Use customer-chosen position if provided, otherwise fetch from Printful printfiles API
         if custom_position:
@@ -972,7 +974,9 @@ def shopify_order_webhook():
             product_id = int(props.get('_Printful Product', '0') or '0')
         except ValueError:
             product_id = 0
-        placement = PRODUCT_PLACEMENT.get(product_id, 'front') if product_id else 'front'
+        # Embroidered products carry an explicit placement (e.g. 'embroidery_chest_center');
+        # otherwise use the product's default print placement.
+        placement = (props.get('_Placement') or '').strip() or (PRODUCT_PLACEMENT.get(product_id, 'front') if product_id else 'front')
 
         # Use customer-set canvas position; fall back to Printful print-area defaults
         position_json = props.get('_Design Position', '').strip()
