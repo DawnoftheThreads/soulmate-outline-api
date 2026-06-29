@@ -24,6 +24,20 @@ PROMPT = (
     'Clean coloring book style outlines. 2K resolution.'
 )
 
+# Bold-outline variant for EMBROIDERY (and engraving). Embroidery can't reproduce hairline
+# detail, so this produces thick, even-weight, simplified contours that stitch cleanly — and
+# aims to look more finished/intentional than typical rough POD embroidery line art.
+BOLD_PROMPT = (
+    'Convert this photo into a BOLD, minimal single-colour outline illustration designed for '
+    'machine embroidery. Use thick, even-weight, continuous closed outlines only — like a clean, '
+    'confident logo or sticker outline. Drastically SIMPLIFY: keep only the essential shapes and '
+    'silhouette of the subject(s); merge or omit small details, individual hair strands, skin '
+    'texture, wrinkles and background. Absolutely no thin lines, no cross-hatching, no shading, '
+    'no gradients, no grey tones, no fills. Every line must be heavy enough to embroider cleanly. '
+    'Keep the composition balanced, elegant and instantly recognisable. Pure white background. '
+    '2K resolution.'
+)
+
 PRINTFUL_KEY       = os.environ.get('PRINTFUL_KEY')        # mockup token (read scopes)
 PRINTFUL_ORDER_KEY = os.environ.get('PRINTFUL_ORDER_KEY')  # orders write token
 SHOPIFY_WEBHOOK_SECRET = os.environ.get('SHOPIFY_WEBHOOK_SECRET', '')
@@ -251,12 +265,12 @@ def add_cors(response):
 app.after_request(add_cors)
 
 
-def generate_line_art(photo_url: str):
+def generate_line_art(photo_url: str, prompt: str = PROMPT):
     result = fal_client.run(
         'fal-ai/nano-banana-pro/edit',
         arguments={
             'image_urls': [photo_url],
-            'prompt': PROMPT,
+            'prompt': prompt,
             'resolution': '2K',
         }
     )
@@ -494,6 +508,8 @@ def process():
         return jsonify({'error': 'Missing photo_url'}), 400
     if not os.environ.get('FAL_KEY'):
         return jsonify({'error': 'Missing FAL_KEY env var'}), 400
+    style = str(data.get('style') or 'fine').lower()        # 'fine' (default, printed) or 'bold' (embroidery)
+    art_prompt = BOLD_PROMPT if style == 'bold' else PROMPT
     try:
         # Capture original photo dimensions before generating line art
         try:
@@ -505,7 +521,7 @@ def process():
         except Exception:
             orig_w, orig_h = None, None
 
-        line_art_url, lineart_bytes = generate_line_art(photo_url)
+        line_art_url, lineart_bytes = generate_line_art(photo_url, art_prompt)
 
         # Fal.ai may output at a different aspect ratio than the input (e.g. 2K landscape).
         # Resize the line art to match the original photo's exact dimensions so the widget
@@ -535,7 +551,8 @@ def process():
         'success': True,
         'line_art_url': line_art_url,
         'sketch_png_base64': base64.b64encode(lineart_bytes).decode(),
-        'note': 'fal.ai nano-banana-pro/edit -- fine line drawing'
+        'style': style,
+        'note': 'fal.ai nano-banana-pro/edit -- ' + ('bold embroidery outline' if style == 'bold' else 'fine line drawing')
     })
 
 
